@@ -1,0 +1,4 @@
+f4a91de071f7956707964b04eb94be79  results/variation/vcf/all.vcf
+018c5674790e3f7e3fcb079aaee6e1b0  results/variation/vcf/snvs.vcf
+697c6077b192f362f5189245a5cc5a68  results/variation/vcf/snvs.filtered.vcf
+04d7860f7f33697bac9ed67d5ff3de36  results/variation/vcf/snvs.final.vcf
