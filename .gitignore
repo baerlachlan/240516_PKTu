@@ -1,0 +1,13 @@
+## Common large files
+*.fastq.gz
+*.fq.gz
+*.fa
+*.bam
+*.bai
+*.vcf
+*.vcf.idx
+*.vcf.gz
+*.vcf.gz.tbi
+
+## Directories
+raw_data/*
