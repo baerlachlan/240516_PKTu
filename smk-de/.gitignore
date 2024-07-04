@@ -1,0 +1,4 @@
+## Workflow-specific
+.snakemake/*
+logs/*
+*.jcounts
