@@ -1,0 +1,953 @@
+---
+title: "DAR Analysis"
+subtitle: "PK Tu psen1 chr14"
+author: "Lachlan Baer"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    fig_width: 8
+    fig_height: 6
+    fig_align: "center"
+    code_folding: hide
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE,
+  fig.align = "center"
+)
+```
+
+# Setup
+
+Load libraries and set global options.
+
+```{r packages}
+suppressPackageStartupMessages({
+  ## Common
+  # library(tadar)
+  library(tidyverse)
+  library(here)
+  library(AnnotationHub)
+  library(scales)
+  library(kableExtra)
+  library(ggrepel)
+  library(RColorBrewer)
+  library(ggpubr)
+  library(pander)
+  library(rmarkdown)
+  library(viridis)
+  ## Project specific
+  # library(VariantAnnotation)
+  # library(Gviz)
+  # library(zoo)
+  # library(msigdbr)
+  # library(readxl)
+  library(limma)
+})
+```
+
+```{r options}
+if (interactive()) setwd(here::here())
+theme_set(theme_bw())
+```
+
+```{r opts}
+## By default Gviz expects UCSC chromosome names
+## We're working with Ensembl so let's turn this off
+# options(ucscChromosomeNames = FALSE)
+```
+
+## Introduction
+
+## EnsDb
+
+```{r ensParams}
+ens_species <- "Danio rerio"
+ens_release <- "111"
+ens_assembly <- "GRCz11"
+```
+
+Grab genome feature annotations for `r ens_species` Ensembl release `r ens_release` (genome assembly `r ens_assembly`).
+
+```{r ensDb}
+ah <- AnnotationHub() %>%
+  subset(species == ens_species) %>%
+  subset(rdataclass == "EnsDb")
+ahId <- ah$ah_id[str_detect(ah$title, ens_release)]
+ensDb <- ah[[ahId]]
+```
+
+```{r primary_chrs}
+primary_chrs <- c(1:25, "MT")
+```
+
+```{r genes}
+genes <- genes(ensDb, filter = SeqNameFilter(primary_chrs))
+mcols(genes) <- mcols(genes)[
+  c("gene_id", "gene_name", "gene_biotype", "entrezid", "description")
+]
+```
+
+## Metadata
+
+Load and clean the sample metadata by renaming columns following `R` naming conventions and setting categorical variables as factors.
+
+```{r}
+metadata <- read_csv(here("misc/metadata.csv")) %>%
+  mutate(
+    sample = paste0(
+      "S",
+      formatC(sample_id, width = 2, format = "d", flag = "0")
+    ),
+    sex = as.factor(sex),
+    genotype_psen1 = as.factor(genotype_psen1),
+    genotype_chr14 = as.factor(genotype_chr14),
+  ) %>%
+  dplyr::select(sample, everything())
+```
+
+```{r metadataVis}
+metadata %>%
+  kable(
+    align = "l",
+    caption = "Sample metadata"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive")
+  )
+```
+
+Set up colours for plotting by genotype.
+Going with a colourblind-friendly palette (`Set2`) for best accessibility.
+
+```{r genoCols}
+# genoCols <- metadata$genotype %>%
+#   levels() %>%
+#   length() %>%
+#   brewer.pal("Set2") %>%
+#   setNames(levels(metadata$genotype))
+```
+
+# DE data
+
+Load in the `dgeList` and `topTable`s from Karissa's DE analysis.
+
+```{r dgeList}
+# dgeList <- readRDS(here("data/R_objects/dge_AB.rds"))
+```
+
+```{r topTables}
+# topTables <- readRDS(here("data/R_objects/AB_toptab_cqn.rds"))
+```
+
+Also pull the gene IDs for DE genes.
+
+```{r}
+# deGenes <- sapply(topTables, function(x){
+#   dplyr::filter(x, DE) %>%
+#     pull(gene_id)
+# }, simplify = FALSE)
+```
+
+# Differential Allelic Representation
+
+DAR analysis is performed using genotype calls from variant calling software.
+Here the `GATK` best practices workflow for RNAseq short variant discovery was followed to produce a multi-sample `VCF` file containing information for any single nucleotide locus that varied in at least one sample.
+Note that specific filters were applied to only select loci with considerable evidence for variation (see the Snakemake workflow in this repository for more information).
+
+---
+
+```{r}
+dar <- function(props, contrasts, region_fixed, region_loci) {
+  
+  lvls <- dimnames(contrasts)[[1]]
+  conts <- dimnames(contrasts)[[2]]
+  if (any(is.null(lvls), is.null(conts)))
+    stop("Dimnames of `contrasts` must be labelled")
+  if (!all(lvls %in% names(props)))
+    stop("Levels of `contrasts` must match names of `props`")
+  contrasts <- .contrastsAsList(contrasts)
+  grl <- .calcDar(props = props, contrasts = contrasts)
+  if (!is.null(region_fixed)) {
+    grl <- .smoothAcrossFixed(dar = grl, region_fixed = region_fixed)
+  } else if (!is.null(region_loci)) {
+    grl <- .smoothAcrossLoci(dar = grl, region_loci = region_loci)
+  }
+  grl
+  
+}
+
+.contrastsAsList <- function(contrasts) {
+  
+  cols <- seq(ncol(contrasts))
+  contrasts_list <- lapply(cols, function(i){
+    grp1 <- names(which(contrasts[,i] == 1))
+    grp2 <- names(which(contrasts[,i] == -1))
+    if (!all(length(grp1) == 1, length(grp2) == 1))
+      stop("`contrasts` defined incorrectly")
+    c(grp1, grp2)
+  })
+  names(contrasts_list) <- colnames(contrasts)
+  contrasts_list
+  
+}
+
+.calcDar <- function(props, contrasts) {
+  
+  grl <- lapply(contrasts, function(x){
+    ## Subset for groups to be contrasted
+    props <- props[x]
+    ## Subset for ranges present in both groups
+    overlaps <- findOverlaps(props[[1]], props[[2]])
+    props[[1]] <- props[[1]][from(overlaps),]
+    props[[2]] <- props[[2]][to(overlaps),]
+    stopifnot(identical(granges(props[[1]]), granges(props[[2]])))
+    gr <- granges(props[[1]])
+    props <- lapply(props, mcols)
+    props <- lapply(props, as.matrix)
+    ## Calculate Euclidean distance
+    dist <- vapply(seq_along(gr), function(i){
+      mat <- rbind(props[[1]][i,], props[[2]][i,])
+      dist <- dist(mat, method = "euclidean")
+      as.numeric(dist)
+    }, numeric(1))
+    ## Convert to DAR
+    mcols(gr)$dar_origin <- dist / sqrt(2)
+    ## Remove seqlevels that may be lost due to no overlap
+    seqlevels(gr) <- seqlevelsInUse(gr)
+    ## Add range_type to metadata for downstream use
+    metadata(gr)$range_type <- "origin"
+    gr
+  })
+  GRangesList(grl)
+  
+}
+
+.smoothAcrossFixed <- function(dar, region_fixed) {
+  
+  if (region_fixed < 1)
+    stop("`region_fixed` must be an integer greater than 0")
+  endoapply(dar, function(x){
+    ## Add window info to metadata for downstream use
+    metadata(x)$region_type <- "fixed"
+    metadata(x)$region_size <- region_fixed
+    ## Resize ranges to have width = region_fixed
+    ## Suppress warnings for out-of-bound ranges because we trim these
+    regions <- suppressWarnings(resize(x, region_fixed, fix = "center"))
+    regions <- trim(regions)
+    #########################
+    ## Split each object by chromosome for improved efficiency of following code
+    if (!identical(seqlevels(x), seqlevels(regions)))
+      stop("")
+    dar_by_chr <- split(x, seqnames(x))
+    regions_by_chr <- split(regions, seqnames(regions))
+    l <- lapply(seq_along(dar_by_chr), function(i){
+      d <- dar_by_chr[[i]]
+      r <- regions_by_chr[[i]]
+      print(paste("Smoothing for regions on Chr", unique(seqnames(d))))
+      ## Find origin ranges that overlap our regions/windows
+      hits <- findOverlaps(r, d)
+      queries <- from(hits)
+      unique_queries <- unique(queries)
+      subjects <- to(hits)
+      dar_origin <- mcols(d)$dar_origin
+      ## Now average any origin dar values contained within the regions
+      dar_region <- vapply(unique_queries, function(y){
+        in_range <- subjects[queries == y]
+        mean(dar_origin[in_range])
+      }, numeric(1))
+      mcols(d)$dar_region <- dar_region
+      d
+    })
+    browser()
+    grl <- GRangesList(l)
+    unlist(grl)
+    #########################
+    # ## Find origin ranges that overlap our regions/windows
+    # hits <- findOverlaps(regions, x)
+    # queries <- from(hits)
+    # unique_queries <- unique(queries)
+    # subjects <- to(hits)
+    # dar_origin <- mcols(x)$dar_origin
+    # ## Now average any origin dar values contained within the regions
+    # dar_region <- vapply(unique_queries, function(y){
+    #   in_range <- subjects[queries == y]
+    #   mean(dar_origin[in_range])
+    # }, numeric(1))
+    # mcols(x)$dar_region <- dar_region
+    # x
+  })
+  
+}
+```
+
+```{r}
+assignFeatureDar <- function(dar, features, dar_val, fill_missing) {
+  # dar_val <- match.arg(dar_val)
+  endoapply(dar, function(x){
+    # browser()
+    .assignFeatureDar_checks(x, dar_val)
+    chr_in_common <- intersect(seqnames(x), seqnames(features))
+    ## Split each object by chromosome for improved efficiency of following code
+    dar_by_chr <- split(x, seqnames(x))
+    features_by_chr <- split(features, seqnames(features))
+    # browser()
+    l <- lapply(chr_in_common, function(y){
+      d <- dar_by_chr[[y]]
+      f <- features_by_chr[[y]]
+      hits <- findOverlaps(f, d)
+      queries <- from(hits)
+      unique_queries <- unique(queries)
+      subjects <- to(hits)
+      dar_origin <- mcols(d)$dar_origin
+      dar_region <- mcols(d)$dar_region
+      dar_mean <- vapply(unique_queries, function(y){
+        # browser()
+        in_range <- subjects[queries == y]
+        if (dar_val == "origin") featureDar <- dar_origin[in_range]
+        if (dar_val == "region") featureDar <- dar_region[in_range]
+        mean(featureDar)
+      }, numeric(1))
+      f$dar <- fill_missing
+      f[unique_queries]$dar <- dar_mean
+      f
+    })
+    # browser()
+    grl <- GRangesList(l)
+    unlist(grl)
+  })
+}
+
+.assignFeatureDar_checks <- function(dar, dar_val) {
+  widths <- width(dar)
+  if (dar_val == "region") {
+    if (!"dar_region" %in% names(mcols(dar)))
+      stop("No dar_region values detected", call. = FALSE)
+    if (min(widths) == 1)
+      warning(
+        "Range(s) detected with width == 1 but dar_val = region. ",
+        "See ?assignGeneDar", call. = FALSE
+      )
+  }
+  if (dar_val == "origin") {
+    if (!"dar_origin" %in% names(mcols(dar)))
+      stop("No dar_origin values detected", call. = FALSE)
+    if (max(widths) > 1)
+      warning(
+        "Range(s) detected with width > 1 but dar_val = origin. ",
+        "See ?assignGeneDar", call. = FALSE
+      )
+  }
+}
+```
+
+---
+
+```{r}
+vcf <- file.path("smk-variants/results/variation/vcf/snvs.final.vcf")
+groups <- list(
+  eofad = metadata$sample[metadata$genotype_psen1 == "eofad"],
+  fai = metadata$sample[metadata$genotype_psen1 == "fai"],
+  wt = metadata$sample[metadata$genotype_psen1 == "wt"],
+  tu = metadata$sample[metadata$genotype_chr14 == "tu"],
+  pk = metadata$sample[metadata$genotype_chr14 == "pk"],
+  het = metadata$sample[metadata$genotype_chr14 == "het"]
+)
+contrasts <- makeContrasts(
+  eofad_vs_wt = eofad - wt,
+  fai_vs_wt = fai - wt,
+  eofad_vs_fai = eofad - fai,
+  tu_vs_pk = tu - pk,
+  tu_vs_het = tu - het,
+  pk_vs_het = pk - het,
+  levels = names(groups)
+)
+region_loci <- 5
+```
+
+```{r}
+gts <- tadar::readGenotypes(vcf, genome = genome(genes)) %>%
+  subsetByOverlaps(as(seqinfo(genes), "GRanges")) %>%
+  keepStandardChromosomes()
+seqinfo(gts) <- seqinfo(genes)
+props <- gts %>%
+  tadar::countAlleles(groups = groups) %>%
+  tadar::filterLoci() %>%
+  tadar::countsToProps()
+```
+
+```{r}
+## 1e3: 3.03 hours / 11.2 mins
+lapply(colnames(contrasts[,-(1:3)]), function(x){
+  print(paste("Beginning comparison", x))
+  start_time <- Sys.time()
+  dar_test <- dar(props = props, contrasts = contrasts[,x,drop = FALSE], region_fixed = 1e4)
+  end_time <- Sys.time()
+  time_taken <- round(end_time - start_time, 2)
+  print(time_taken)
+  saveRDS(dar_test, here(paste0("R/data/dar_1e4_", x, ".Rds")))
+})
+```
+
+```{r}
+dar_1e4 <- lapply(colnames(contrasts), function(x){
+  readRDS(here(paste0("R/data/dar_1e4_", x, ".Rds"))) %>%
+    unlist(use.names = FALSE)
+}) %>%
+  GRangesList() %>%
+  setNames(colnames(contrasts))
+dar_1e6 <- lapply(colnames(contrasts), function(x){
+  readRDS(here(paste0("R/data/dar_1e6_", x, ".Rds"))) %>%
+    unlist(use.names = FALSE)
+}) %>%
+  GRangesList() %>%
+  setNames(colnames(contrasts))
+```
+
+```{r}
+dar_1e4_ranges <- tadar::flipRanges(dar_1e4)
+tmp1 <- assignFeatureDar(
+  dar = dar_1e4_ranges[1],
+  features = genes,
+  dar_val = "region",
+  fill_missing = NA
+)
+tmp2 <- tadar::assignFeatureDar(
+  dar = dar_1e4_ranges[1],
+  features = genes,
+  dar_val = "region",
+  fill_missing = NA
+)
+```
+
+```{r}
+dar_fixed <- dar(props, contrasts = contrasts, region_fixed = 1e3) %>%
+  flipRanges() %>%
+  assignFeatureDar(features = genes, dar_val = "region")
+saveRDS(props, "props.Rds")
+saveRDS(dar_fixed, "dar_fixed.Rds")
+```
+
+```{r}
+dar_loci <- dar(props, contrasts = contrasts, region_loci = 5) %>%
+  flipRanges(extend_edges = TRUE) %>%
+  assignFeatureDar(features = genes, dar_val = "region")
+```
+
+## Genotypes
+
+Genotype data from the `VCF` file is parsed into a `GRanges` class object using the `darr` package.
+This file is large and therefore does not exist in the Git repository.
+Phasing information is also removed when reading the genotypes as it is not required for DAR analysis and complicates downstream processing.
+
+```{r genotypes}
+vcf_path <- file.path(
+  "/hpcfs/users/a1647910/2022_MPSIII_3mBrainRNAseq/code",
+  "analysis-variants_AB/results/09_variants/6_select/all_samples.vcf.gz"
+)
+genotypes <- readGenotypes(
+  file = vcf_path,
+  unphase = TRUE,
+  genome = genome(ensDb)
+)
+```
+
+Genotypes are reported as numeric indices.
+`0` indicates the reference allele, `1` is the first alternate allele, `2` is the second alternate allele, and so on.
+For DAR analysis, we work directly with the indices as they are consistent across all samples for a single variant position.
+
+## Allele counts
+
+We aim to calculate a DAR metric at each suitable variant locus.
+This requires us to firstly summarise the genotype data into counts of the alleles reported at each variant locus.
+First we define our sample grouping structure as a `list`, where each element contains a character vector of samples within a single group.
+
+```{r samplesByGroup}
+samplesByGroup <- metadata %>%
+  split(f = .$genotype) %>%
+  sapply(function(x){
+    pull(x, basename)
+  }, simplify = FALSE)
+```
+
+Now at each locus we can count the number of alleles that exist within the groups.
+This returns a `GRangesList` with each element corresponding to a different sample group.
+
+```{r alleleCounts}
+alleleCounts <- countAlleles(genotypes = genotypes, groups = samplesByGroup)
+```
+
+## Normalisation
+
+Not all samples have genotype calls, so we normalise by converting the allele counts into a proportion of total counts at each locus.
+We also filter variant loci independently within each sample group with the default criterion: number of samples with called genotypes > number of samples with missing genotypes.
+
+```{r alleleProps}
+alleleProps <- countsToProps(counts = alleleCounts, filter = TRUE)
+```
+
+## DAR
+
+Now that we have normalised values of allelic representation at each variant locus within our sample groups, we can calculate the DAR metric between groups.
+Firstly, we define our contrasts of interest.
+
+```{r contrasts}
+contrasts <- makeContrasts(
+  A_vs_WT = MPSIIIA - WT,
+  B_vs_WT = MPSIIIB - WT,
+  het_vs_WT = sgsh_het - WT,
+  levels = names(alleleProps)
+)
+```
+
+DAR is calculated by firstly determining the Euclidean distance between allelic proportions of the contrasted sample groups.
+The Euclidean distance is then converted to the DAR metric by dividing by $\sqrt{2}$, resulting in an easy-to-interpret value between 0 and 1, where 0 represents identical allelic representation and 1 represents complete diversity.
+This is handled within the `dar()` function by passing our allelic proportions and intended contrasts as arguments.
+
+Two types of DAR values are reported by the `dar()` function as metadata columns of the resulting `GRanges` objects:
+
+- `dar_origin`: The raw DAR values calculated at single nucleotide positions (the origin) between sample groups.
+This represents a DAR estimate at a precise locus.
+- `dar_region`: The mean of raw DAR values in a region surrounding the origin. 
+The size of the region is controlled using the `winSize` argument, which establishes an elastic sliding window to average the specified number of dar_origin values.
+This represents a DAR estimate for the genomic region surrounding the origin locus. 
+
+```{r winSize}
+winSize <- 5
+```
+
+With a chosen elastic window size of `r winSize` loci, this will smooth the DAR metric at each origin locus with the DAR values of the `r (winSize - 1) / 2` loci either side.
+
+```{r dar}
+dar <- dar(props = alleleProps, contrasts = contrasts, winSize = winSize)
+```
+
+We now have DAR values for the common loci between the two sample groups in each contrast.
+Each element of the resulting `GRangesList` object represents a single contrast and are named as defined in our `contrasts` object.
+
+## DAR ECDF
+
+Plotting the empirical cumulative distribution function of DAR by chromosome is useful to determine whether the mutant chromosome contains higher DAR relative to other chromosomes.
+Here we highlight the chromosome containing the mutation to visually identify if this is the case.
+The *sgsh* gene implicated with MPS-IIIA is located on chromosome 22.
+The *naglu* gene implicated with MPS-IIIB is located on chromosome 24.
+
+```{r darECDF_A_chr22}
+plotDarECDF(dar$A_vs_WT, darVal = "region", highlight = "22") +
+  scale_colour_manual(values = c("red", "grey")) +
+  labs(title = "MPSIIIA vs WT")
+```
+
+This dataset provides an interesting scenario where samples were genotyped at both the *sgsh* and *naglu* loci.
+Samples within the MPS-IIIA experimental groups were selected so that they were wildtype at the *naglu* locus.
+All samples in the dataset originated from a single cross of double heterozygous parents, meaning that all samples in the MPS-IIIA experimental groups should share identical wildtype homologues of chromosome 24 (the chromosome of the *naglu* locus), disregarding recombination.
+This means that chromosome 24 should display relatively low DAR in the MPS-IIIA comparisons, so let's take a look.
+
+```{r darECDF_A_chr24}
+plotDarECDF(dar$A_vs_WT, darVal = "region", highlight = "24") +
+  scale_colour_manual(values = c("red", "grey")) +
+  labs(title = "MPSIIIA vs WT")
+```
+
+Chromosome 24 does indeed have very low DAR relative to the other chromosomes.
+This contributes evidence to the argument that genotype-based selection of samples is a key driver of DAR outcomes in RNA-seq experiments.
+
+An analogous situation is present in the MPS-IIIB samples, where the samples should share near-identical wildtype homologues of chromosome 22.
+Let's take a look at both.
+
+```{r darECDF_B_chr24}
+plotDarECDF(dar$B_vs_WT, darVal = "region", highlight = "24") +
+  scale_colour_manual(values = c("red", "grey")) +
+  labs(title = "MPSIIIB vs WT")
+```
+
+```{r darECDF_B_chr22}
+plotDarECDF(dar$B_vs_WT, darVal = "region", highlight = "22") +
+  scale_colour_manual(values = c("red", "grey")) +
+  labs(title = "MPSIIIB vs WT")
+```
+
+Again we see relatively high DAR on the mutant chromosome (24), and relatively low DAR on the wildtype controlled chromosome (22).
+
+Lastly the MPS-IIIA heterozygotes.
+
+```{r darECDF_het_chr24}
+plotDarECDF(dar$het_vs_WT, darVal = "region", highlight = "22") +
+  scale_colour_manual(values = c("red", "grey")) +
+  labs(title = "sgsh+/- vs WT")
+```
+
+```{r darECDF_het_chr22}
+plotDarECDF(dar$het_vs_WT, darVal = "region", highlight = "24") +
+  scale_colour_manual(values = c("red", "grey")) +
+  labs(title = "sgsh+/- vs WT")
+```
+
+Unsurprisingly, we see another example of high DAR on the mutant chromosome, and low DAR on the controlled wildtype chromosome.
+
+From these plots we can predict that for each comparison, an overrepresentation of DE genes may exist on the respective mutant chromosomes, due to the potential of eQTL differences.
+However, the controlled wildtype chromosomes should exhibit far less of these false positives due to low DAR.
+
+## DEG-DAR relationship
+
+We can produce a localised visualisation to assess whether differentially expressed genes (DEG) may be prone eQTL artefacts by plotting the trend in DAR along a chromosomal axis and overlaying the position of DEGs.
+This functionality has not yet been implemented in the `darr` package, so let's define a function here instead.
+
+```{r plotChrDar}
+plotChrDar2 <- function(
+    dar, chromosome, features = GRanges(), foi = GRanges(),
+    darType = "b", highlight_features = TRUE,
+    title = ""
+){
+  tracks <- list()
+  
+  if (length(foi)) {
+    foi <- foi %>%
+      plyranges::filter(seqnames == chromosome) %>%
+      plyranges::mutate(symbol = gene_name)
+    foi_track <- GeneRegionTrack(
+      range = foi,
+      transcriptAnnotation = "symbol",
+      col = "white",
+      fill = "white",
+      showTranscriptId = TRUE,
+      fontcolor.group = "red",
+      cex.group = 0.6,
+      size = 0.5,
+      name = NULL
+    )
+    tracks <- append(tracks, foi_track)
+  }
+  
+  axis_track <- GenomeAxisTrack(
+    add53 = TRUE,
+    add35 = TRUE,
+    name = paste0("Chr", chromosome),
+    showTitle = TRUE,
+    size = 1
+  )
+  if (length(foi)) {
+    axis_track <- HighlightTrack(
+      trackList = list(axis_track),
+      range = foi
+    )
+  }
+  tracks <- append(tracks, axis_track)
+  
+  if (length(features)) {
+    features <- features %>%
+      plyranges::filter(seqnames == chromosome) %>%
+      plyranges::mutate(symbol = gene_name)
+    features_track <- AnnotationTrack(
+      range = features,
+      name = "DE",
+      shape = "box",
+      fill = "darkgray",
+      group = features$gene_name,
+      groupAnnotation = "group",
+      fontcolor.group = 1,
+      cex.group = 0.6,
+      size = 0.4
+    )
+    tracks <- append(tracks, features_track)
+  }
+  
+  dar_track <- dar[,"dar_region"] %>%
+    plyranges::filter(seqnames == chromosome) %>%
+    DataTrack(
+      type = darType,
+      name = "DAR",
+      size = 8,
+      window = -1,
+      windowSize = 1,
+      cex = 0.4,
+      col = "grey20",
+      col.axis = "black",
+      yTicksAt = seq(0, 1, 0.1),
+      ylim = c(0, 1)
+    )
+  if (highlight_features) {
+    if (all(length(features) & length(foi))) {
+      ranges <- c(features, foi)
+    } else if (length(features)) {
+      ranges <- features
+    } else if (length(foi)) {
+      ranges <- foi
+    } else {
+      ranges <- GRanges()
+    }
+    dar_track <- HighlightTrack(
+      trackList = list(dar_track),
+      range = ranges,
+      col = c(rep("#ffe0e0", length(features)), rep("red", length(foi))),
+      fill = c(rep("#ffe0e0", length(features)), rep("red", length(foi)))
+    )
+  }
+  tracks <- append(tracks, dar_track)
+  
+  plotTracks(
+    trackList = tracks,
+    main = title,
+    cex.main = 1,
+    cex.title = 0.6,
+    col.title = "black",
+    background.title = "white"
+  )
+}
+```
+
+### MPS-IIIA
+
+First let's look at the mutant chromosome, as this was identified as having the highest average DAR from the ECDF we plotted above.
+
+```{r}
+plotChrDar(
+  dar = dar$A_vs_WT,
+  darVal = "region",
+  chr = "22",
+  foi = genes[genes$gene_name == "sgsh"],
+  foi_anno = "gene_name",
+  foi_highlight = TRUE,
+  features = genes[genes$gene_id %in% deGenes$`MPS-IIIA`],
+  features_anno = "gene_name",
+  features_highlight = TRUE
+)
+```
+
+```{r chrDar_A_chr22}
+plotChrDar2(
+  dar = dar$A_vs_WT,
+  chromosome = "22",
+  features = genes[genes$gene_id %in% deGenes$`MPS-IIIA`],
+  foi = genes[genes$gene_name == "sgsh"]
+)
+```
+
+And comparing this to the controlled wildtype chromosome 24:
+
+```{r chrDar_A_chr24}
+plotChrDar(
+  dar = dar$A_vs_WT,
+  chromosome = "24",
+  features = genes[genes$gene_id %in% deGenes$`MPS-IIIA`]
+)
+```
+
+### MPS-IIIB
+
+The mutant chromosome also showed high DAR in the MPS-IIIB vs. WT comparison.
+
+```{r chrDar_B_chr24}
+plotChrDar(
+  dar = dar$B_vs_WT,
+  chromosome = "24",
+  features = genes[genes$gene_id %in% deGenes$`MPS-IIIB`],
+  foi = genes[genes$gene_name == "naglu"]
+)
+```
+
+Interestingly we see a region of low DAR along the mutant chromosome, however no DEGs exist in these regions.
+It is likely that many of the genes classified as DE are eQTLs as they are found within regions of high DAR.
+
+Again comparing to the controlled wildtype chromosome 22:
+
+```{r chrDar_B_chr22}
+plotChrDar(
+  dar = dar$B_vs_WT,
+  chromosome = "22",
+  features = genes[genes$gene_id %in% deGenes$`MPS-IIIB`]
+)
+```
+
+### sgsh+/-
+
+The heterozygous mutant *sgsh* vs WT comparison provides an interesting situation, where MPS-IIIA disease phenotypes are not expected to be present.
+Let's see how the trend in DAR aligns with DE genes on the mutant chromosome.
+
+```{r chrDar_het_chr22}
+plotChrDar(
+  dar = dar$het_vs_WT,
+  chromosome = "22",
+  features = genes[genes$gene_id %in% deGenes$`sgsh/+`],
+  foi = genes[genes$gene_name == "sgsh"]
+)
+```
+
+The majority of DE genes are found in a similar region, where DAR reaches is peak value of ~0.75.
+These suggests that allelic differences between sample groups are prevalent around this region and genes may be DE due to eQTLs.
+
+Let's look again at the controlled wildtype chromosome 24.
+
+```{r chrDar_het_chr24}
+plotChrDar(
+  dar = dar$het_vs_WT,
+  chromosome = "24",
+  features = genes[genes$gene_id %in% deGenes$`sgsh/+`]
+)
+```
+
+## Assign gene DAR
+
+We can assign DAR values to genes within the dataset to provide an estimate of the potential for a gene's expression to be impacted by eQTLs.
+eQTLs don't necessarily exist within the gene itself, so it is preferable to use smoothed DAR values (`dar_region` metadata column in the `dar` object) as an estimate of DAR within a region.
+First we need to convert the ranges of our `dar` object to represent regions.
+Here we also extend the edge ranges of each chromosome to encompass the entire chromosome, such that genes in these regions also get assigned a DAR value.
+
+```{r darRegions}
+darRegions <- convertRanges(dar, extendEdges = TRUE)
+```
+
+```{r geneDar}
+geneDar <- assignFeatureDar(genes, darRegions, darVal = "region")
+```
+
+We will save these assigned values for use in further analysis.
+
+```{r saveGeneDar}
+geneDar_path <- file.path(here("data/dar-analysis"), expArm, "geneDar.Rds")
+saveRDS(geneDar, geneDar_path)
+```
+
+## LogFC comparison between MPS-IIIA and sgsh/+
+
+```{r}
+lfc_comp <- topTables %>%
+  bind_rows() %>%
+  dplyr::filter(coef %in% c("MPS-IIIA", "sgsh/+")) %>%
+  dplyr::filter(chromosome == "22") %>%
+  droplevels() %>%
+  dplyr::select(gene_id, logFC, coef) %>%
+  spread(key = "coef", value = "logFC") %>%
+  dplyr::rename(lfc_hom = `MPS-IIIA`, lfc_het = `sgsh/+`) %>%
+  mutate(
+    DE = case_when(
+      gene_id %in%
+        intersect(deGenes$`MPS-IIIA`, deGenes$`sgsh/+`)
+      ~ "Both", 
+      gene_id %in% deGenes$`sgsh/+`[!deGenes$`sgsh/+` %in% deGenes$`MPS-IIIA`]
+      ~ "Het only",
+      gene_id %in% deGenes$`MPS-IIIA`[!deGenes$`MPS-IIIA` %in% deGenes$`sgsh/+`]
+      ~ "Hom only", 
+      TRUE ~ "None"
+    )
+  ) %>%
+  left_join(as_tibble(geneDar$het_vs_WT))
+```
+
+```{r}
+lfc_comp %>%
+  ggplot(aes(x = lfc_hom, y = lfc_het)) +
+  geom_point(
+    aes(fill = DE, colour = DE),
+    size = 2.5,
+    colour = "black",
+    shape = 21,
+    alpha = 0.5
+  ) +
+  geom_abline(slope = 1) +
+  theme(aspect.ratio = 1) +
+  scale_fill_manual(values = brewer.pal(3, "Dark2")) +
+  labs(size = "DAR", x = "MPS-IIIA homozygous", y = "MPS-IIIA heterozygous") +
+  ggtitle("LogFC of genes on chromosome 22 in MPS-IIIA hom vs het")
+```
+
+```{r}
+lfc_comp %>%
+  dplyr::filter(DE != "None") %>%
+  # dplyr::filter(DE != "None" & lfc_hom > 0) %>%
+  ggplot(aes(x = lfc_hom, y = lfc_het)) +
+  geom_point(
+    aes(fill = DE, colour = DE),
+    size = 2.5,
+    colour = "black",
+    shape = 21,
+    alpha = 0.5
+  ) +
+  geom_text_repel(
+    aes(label = gene_name),
+    size = 3,
+    data = . %>% dplyr::filter(lfc_hom > 0 | lfc_hom < -5)
+  ) +
+  geom_abline(slope = 1) +
+  theme(aspect.ratio = 1) +
+  scale_fill_manual(values = brewer.pal(3, "Dark2")) +
+  labs(size = "DAR", x = "MPS-IIIA homozygous", y = "MPS-IIIA heterozygous") +
+  ggtitle("LogFC of genes on chromosome 22 in MPS-IIIA hom vs het")
+```
+
+Notes:
+
+- All DE genes in hets also DE in homs
+- All upregulated DE genes have similar logFC between homs and hets
+
+```{r}
+lfc_goi <- lfc_comp %>%
+  # dplyr::filter(DE != "None")
+  # dplyr::filter(lfc_hom > 0)
+  dplyr::filter(lfc_hom > 0 & DE != "None")
+# dplyr::filter(DE == "Hom only" & lfc_hom > 0)
+soi <- metadata %>%
+  dplyr::filter(genotype == "sgsh_het") %>%
+  # dplyr::filter(genotype == "MPSIIIA") %>%
+  pull(sample)
+dgeList_goi <- dgeList[lfc_goi$gene_id, soi]
+dgeList_goi$offset <- NULL
+cpm_goi <- dgeList_goi %>%
+  cpm(log = TRUE)
+```
+
+```{r}
+apply(cpm_goi, 1, var) %>%
+  enframe(name = "gene_id", value = "cpm_var") %>%
+  left_join(lfc_goi) %>%
+  ggplot(aes(x = lfc_hom, y = lfc_het)) +
+  geom_point(
+    aes(fill = DE, colour = DE, size = cpm_var),
+    colour = "black",
+    shape = 21,
+    alpha = 0.5
+  ) +
+  geom_text_repel(
+    aes(label = gene_name),
+    size = 3,
+    data = . %>% dplyr::filter(lfc_hom > 0 | lfc_hom < -5)
+  ) +
+  geom_abline(slope = 1) +
+  theme(aspect.ratio = 1) +
+  scale_fill_manual(values = brewer.pal(3, "Dark2")) +
+  labs(size = "logCPM variance in hets", x = "MPS-IIIA homozygous", y = "MPS-IIIA heterozygous") +
+  ggtitle("LogFC of genes on chromosome 22 in MPS-IIIA hom vs het")
+```
+
+```{r}
+pca <- cpm_goi %>%
+  t() %>%
+  prcomp()
+pcaVars <- percent_format(0.1)(summary(pca)$importance["Proportion of Variance",])
+pca$x %>%
+  as.data.frame() %>%
+  rownames_to_column("sample") %>%
+  left_join(metadata) %>%
+  as_tibble() %>%
+  ggplot(aes(PC1, PC2, colour = genotype, fill = genotype, group = genotype)) +
+  geom_point(size = 2) +
+  geom_text_repel(aes(label = sample), show.legend = FALSE) +
+  # stat_ellipse(geom = "polygon", alpha = 0.05, show.legend = FALSE) +
+  guides(fill = "none") +
+  scale_colour_manual(values = genoCols) +
+  labs(
+    x = paste0("PC1 (", pcaVars[["PC1"]], ")"),
+    y = paste0("PC2 (", pcaVars[["PC2"]], ")"),
+    colour = "Genotype"
+  )
+```

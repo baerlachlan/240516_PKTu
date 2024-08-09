@@ -1,0 +1,14 @@
+---
+title: "PKTu"
+subtitle: "Home"
+author: "Lachlan Baer"
+# date: 07/16/24
+date-modified: today
+date-format: 'DD MMMM, YYYY'
+modified-title: "LAST MODIFIED"
+code-fold: true
+fig-width: 8
+fig-height: 8
+fig-align: center
+---
+
