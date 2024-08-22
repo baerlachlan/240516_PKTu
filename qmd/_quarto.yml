@@ -1,0 +1,34 @@
+project:
+  title: "PKTu"
+  type: website
+  output-dir: ../docs
+
+website:
+  back-to-top-navigation: true
+  sidebar:
+    style: "floating"
+    search: true
+    border: true
+    contents:
+      - text: Home
+        href: index.qmd
+      - text: Quality control
+        href: qc.qmd
+      - text: Differential Expression
+        href: de.qmd
+      - text: Differential Expression (CQN)
+        href: de_cqn.qmd
+    tools:
+      - icon: github
+        href: https://github.com/baerlachlan
+  search:
+    location: sidebar
+    type: overlay
+
+format:
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    # css: custom.css
+    toc: true
