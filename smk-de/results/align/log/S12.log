@@ -1,10 +1,10 @@
 STAR version=2.7.11b
 STAR compilation time,server,dir=2024-01-29T15:15:38+0000 :/opt/conda/conda-bld/star_1706541070242/work/source
 ##### Command Line:
-/hpcfs/users/a1647910/smk-rnaseq-de/.snakemake/conda/4a406e3995e33ce45ffc938eaa5c76d1_/bin/STAR-avx2 --runThreadN 16 --genomeDir resources/genome --readFilesIn results/merge/fastq/S12_R1.fastq.gz results/merge/fastq/S12_R2.fastq.gz --readFilesCommand gunzip -c --sjdbOverhang 97 --outSAMtype BAM SortedByCoordinate --twopassMode Basic --outTmpDir /mnt/tmp_local/lls_2390695/tmpjswl0zp7/STARtmp --outFileNamePrefix /mnt/tmp_local/lls_2390695/tmpjswl0zp7/ --outStd BAM_SortedByCoordinate
+/hpcfs/users/a1647910/240516_PKTu/smk-rnaseq-star-featurecounts-1.1.2/.snakemake/conda/2639059bb531e7821b72b1ca97031401_/bin/STAR-avx2 --runThreadN 16 --genomeDir resources/genome --readFilesIn results/merge/fastq/S12_R1.fastq.gz results/merge/fastq/S12_R2.fastq.gz --readFilesCommand gunzip -c --sjdbOverhang 97 --outSAMtype BAM SortedByCoordinate --twopassMode Basic --outTmpDir /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/STARtmp --outFileNamePrefix /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/ --outStd BAM_SortedByCoordinate
 ##### Initial USER parameters from Command Line:
-outFileNamePrefix                 /mnt/tmp_local/lls_2390695/tmpjswl0zp7/
-outTmpDir                         /mnt/tmp_local/lls_2390695/tmpjswl0zp7/STARtmp
+outFileNamePrefix                 /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/
+outTmpDir                         /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/STARtmp
 outStd                            BAM_SortedByCoordinate
 ###### All USER parameters from Command Line:
 runThreadN                    16     ~RE-DEFINED
@@ -14,8 +14,8 @@ readFilesCommand              gunzip   -c        ~RE-DEFINED
 sjdbOverhang                  97     ~RE-DEFINED
 outSAMtype                    BAM   SortedByCoordinate        ~RE-DEFINED
 twopassMode                   Basic     ~RE-DEFINED
-outTmpDir                     /mnt/tmp_local/lls_2390695/tmpjswl0zp7/STARtmp     ~RE-DEFINED
-outFileNamePrefix             /mnt/tmp_local/lls_2390695/tmpjswl0zp7/     ~RE-DEFINED
+outTmpDir                     /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/STARtmp     ~RE-DEFINED
+outFileNamePrefix             /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/     ~RE-DEFINED
 outStd                        BAM_SortedByCoordinate     ~RE-DEFINED
 ##### Finished reading parameters from all sources
 
@@ -24,8 +24,8 @@ runThreadN                        16
 genomeDir                         resources/genome
 readFilesIn                       results/merge/fastq/S12_R1.fastq.gz   results/merge/fastq/S12_R2.fastq.gz   
 readFilesCommand                  gunzip   -c   
-outFileNamePrefix                 /mnt/tmp_local/lls_2390695/tmpjswl0zp7/
-outTmpDir                         /mnt/tmp_local/lls_2390695/tmpjswl0zp7/STARtmp
+outFileNamePrefix                 /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/
+outTmpDir                         /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/STARtmp
 outStd                            BAM_SortedByCoordinate
 outSAMtype                        BAM   SortedByCoordinate   
 sjdbOverhang                      97
@@ -33,25 +33,25 @@ twopassMode                       Basic
 
 -------------------------------
 ##### Final effective command line:
-/hpcfs/users/a1647910/smk-rnaseq-de/.snakemake/conda/4a406e3995e33ce45ffc938eaa5c76d1_/bin/STAR-avx2   --runThreadN 16   --genomeDir resources/genome   --readFilesIn results/merge/fastq/S12_R1.fastq.gz   results/merge/fastq/S12_R2.fastq.gz      --readFilesCommand gunzip   -c      --outFileNamePrefix /mnt/tmp_local/lls_2390695/tmpjswl0zp7/   --outTmpDir /mnt/tmp_local/lls_2390695/tmpjswl0zp7/STARtmp   --outStd BAM_SortedByCoordinate   --outSAMtype BAM   SortedByCoordinate      --sjdbOverhang 97   --twopassMode Basic
+/hpcfs/users/a1647910/240516_PKTu/smk-rnaseq-star-featurecounts-1.1.2/.snakemake/conda/2639059bb531e7821b72b1ca97031401_/bin/STAR-avx2   --runThreadN 16   --genomeDir resources/genome   --readFilesIn results/merge/fastq/S12_R1.fastq.gz   results/merge/fastq/S12_R2.fastq.gz      --readFilesCommand gunzip   -c      --outFileNamePrefix /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/   --outTmpDir /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/STARtmp   --outStd BAM_SortedByCoordinate   --outSAMtype BAM   SortedByCoordinate      --sjdbOverhang 97   --twopassMode Basic
 ----------------------------------------
 
 Number of fastq files for each mate = 1
 
    Input read files for mate 1 :
--rw-rw-r-- 1 a1647910 a1647910 6215296624 Jul  2 22:36 results/merge/fastq/S12_R1.fastq.gz
+-rw-rw-r-- 1 a1647910 a1647910 6215296624 Aug 22 12:00 results/merge/fastq/S12_R1.fastq.gz
 
    readsCommandsFile:
-exec > "/mnt/tmp_local/lls_2390695/tmpjswl0zp7/STARtmp/tmp.fifo.read1"
+exec > "/mnt/tmp_local/lls_2850183/tmp2rxe8v6t/STARtmp/tmp.fifo.read1"
 echo FILE 0
 gunzip   -c      "results/merge/fastq/S12_R1.fastq.gz"
 
 
    Input read files for mate 2 :
--rw-rw-r-- 1 a1647910 a1647910 6086161123 Jul  2 22:39 results/merge/fastq/S12_R2.fastq.gz
+-rw-rw-r-- 1 a1647910 a1647910 6086161123 Aug 22 12:01 results/merge/fastq/S12_R2.fastq.gz
 
    readsCommandsFile:
-exec > "/mnt/tmp_local/lls_2390695/tmpjswl0zp7/STARtmp/tmp.fifo.read2"
+exec > "/mnt/tmp_local/lls_2850183/tmp2rxe8v6t/STARtmp/tmp.fifo.read2"
 echo FILE 0
 gunzip   -c      "results/merge/fastq/S12_R2.fastq.gz"
 
@@ -59,7 +59,7 @@ ParametersSolo: --soloCellFilterType CellRanger2.2 filtering parameters:  3000 0
 WARNING: --limitBAMsortRAM=0, will use genome size as RAM limit for BAM sorting
 Finished loading and checking parameters
 Reading genome generation parameters:
-### /hpcfs/users/a1647910/smk-rnaseq-de/.snakemake/conda/4a406e3995e33ce45ffc938eaa5c76d1_/bin/STAR-avx2   --runMode genomeGenerate      --runThreadN 8   --genomeDir resources/genome   --genomeFastaFiles resources/genome.fa      --outTmpDir /mnt/tmp_local/lls_2389453/tmpa30m81__/STARtmp   --sjdbGTFfile resources/annotation.gtf   --sjdbOverhang 97
+### /hpcfs/users/a1647910/240516_PKTu/smk-rnaseq-star-featurecounts-1.1.2/.snakemake/conda/2639059bb531e7821b72b1ca97031401_/bin/STAR-avx2   --runMode genomeGenerate      --runThreadN 8   --genomeDir resources/genome   --genomeFastaFiles resources/genome.fa      --outTmpDir /mnt/tmp_local/lls_2849684/tmpbt98_o3k/STARtmp   --sjdbGTFfile resources/annotation.gtf   --sjdbOverhang 97
 ### GstrandBit=32
 versionGenome                 2.7.4a     ~RE-DEFINED
 genomeType                    Full     ~RE-DEFINED
@@ -1073,7 +1073,7 @@ Number of real (reference) chromosomes= 993
 991	KN150216.1	1020	1601961984
 992	KN150481.1	1008	1602224128
 993	KN150525.1	650	1602486272
-Started loading the genome: Wed Jul  3 11:31:11 2024
+Started loading the genome: Thu Aug 22 12:53:50 2024
 
 Genome: size given as a parameter = 1652462691
 SA: size given as a parameter = 11700381878
@@ -1087,7 +1087,7 @@ Loading Genome ... done! state: good=1 eof=0 fail=0 bad=0; loaded 1652462691 byt
 SA file size: 11700381878 bytes; state: good=1 eof=0 fail=0 bad=0
 Loading SA ... done! state: good=1 eof=0 fail=0 bad=0; loaded 11700381878 bytes
 Loading SAindex ... done: 1565873619 bytes
-Finished loading the genome: Wed Jul  3 11:31:24 2024
+Finished loading the genome: Thu Aug 22 12:54:13 2024
 
 Processing splice junctions database sjdbN=254945,   pGe.sjdbOverhang=97 
 alignIntronMax=alignMatesGapMax=0, the max intron size will be approximately determined by (2^winBinNbits)*winAnchorDistNbins=589824
@@ -1109,25 +1109,21 @@ Created thread # 12
 Created thread # 13
 Created thread # 14
 Created thread # 15
-Thread #11 end of input stream, nextChar=-1
-Completed: thread #7
-Completed: thread #2
-Completed: thread #15
-Completed: thread #6
-Completed: thread #9
-Completed: thread #8
-Completed: thread #5
-Completed: thread #10
-Completed: thread #13
-Completed: thread #1
+Thread #12 end of input stream, nextChar=-1
 Completed: thread #14
+Completed: thread #15
 Completed: thread #0
+Completed: thread #2
+Completed: thread #1
 Joined thread # 1
 Joined thread # 2
 Completed: thread #3
 Joined thread # 3
-Completed: thread #11
-Completed: thread #12
+Completed: thread #5
+Completed: thread #7
+Completed: thread #6
+Completed: thread #8
+Completed: thread #9
 Completed: thread #4
 Joined thread # 4
 Joined thread # 5
@@ -1135,15 +1131,19 @@ Joined thread # 6
 Joined thread # 7
 Joined thread # 8
 Joined thread # 9
+Completed: thread #11
+Completed: thread #10
 Joined thread # 10
 Joined thread # 11
+Completed: thread #13
+Completed: thread #12
 Joined thread # 12
 Joined thread # 13
 Joined thread # 14
 Joined thread # 15
-Jul 03 11:37:26   Loaded database junctions from the generated genome resources/genome//sjdbList.out.tab: 254945 total junctions
+Aug 22 12:59:41   Loaded database junctions from the generated genome resources/genome//sjdbList.out.tab: 254945 total junctions
 
-Jul 03 11:37:27   Loaded database junctions from the 1st pass file: /mnt/tmp_local/lls_2390695/tmpjswl0zp7/_STARpass1//SJ.out.tab: 485501 total junctions
+Aug 22 12:59:41   Loaded database junctions from the 1st pass file: /mnt/tmp_local/lls_2850183/tmp2rxe8v6t/_STARpass1//SJ.out.tab: 485501 total junctions
 
 WARNING: long repeat for junction # 15588 : 10 19596636 19597001; left shift = 255; right shift = 58
 WARNING: long repeat for junction # 49248 : 14 2194821 2201680; left shift = 255; right shift = 67
@@ -1151,38 +1151,38 @@ WARNING: long repeat for junction # 58506 : 15 14827403 14851352; left shift = 6
 WARNING: long repeat for junction # 62246 : 15 29652210 29666695; left shift = 33; right shift = 255
 WARNING: long repeat for junction # 130121 : 21 25216740 25219252; left shift = 255; right shift = 23
 WARNING: long repeat for junction # 299387 : 14 2194821 2201680; left shift = 255; right shift = 67
-Jul 03 11:37:27   Finished preparing junctions
-Jul 03 11:37:27 ..... inserting junctions into the genome indices
-Jul 03 11:37:33   Finished SA search: number of new junctions=54830, old junctions=254945
-Jul 03 11:37:39   Finished sorting SA indicesL nInd=21257554
+Aug 22 12:59:42   Finished preparing junctions
+Aug 22 12:59:42 ..... inserting junctions into the genome indices
+Aug 22 12:59:46   Finished SA search: number of new junctions=54830, old junctions=254945
+Aug 22 12:59:52   Finished sorting SA indicesL nInd=21257554
 Genome size with junctions=1663154541  1602748416   60406125
 GstrandBit1=32   GstrandBit=32
-Jul 03 11:38:13   Finished inserting junction indices
-Jul 03 11:38:20   Finished SAi
-Jul 03 11:38:20 ..... finished inserting junctions into genome
+Aug 22 13:00:24   Finished inserting junction indices
+Aug 22 13:00:31   Finished SAi
+Aug 22 13:00:31 ..... finished inserting junctions into genome
 
    Input read files for mate 1 :
--rw-rw-r-- 1 a1647910 a1647910 6215296624 Jul  2 22:36 results/merge/fastq/S12_R1.fastq.gz
+-rw-rw-r-- 1 a1647910 a1647910 6215296624 Aug 22 12:00 results/merge/fastq/S12_R1.fastq.gz
 
    readsCommandsFile:
-exec > "/mnt/tmp_local/lls_2390695/tmpjswl0zp7/STARtmp/tmp.fifo.read1"
+exec > "/mnt/tmp_local/lls_2850183/tmp2rxe8v6t/STARtmp/tmp.fifo.read1"
 echo FILE 0
 gunzip   -c      "results/merge/fastq/S12_R1.fastq.gz"
 
 
    Input read files for mate 2 :
--rw-rw-r-- 1 a1647910 a1647910 6086161123 Jul  2 22:39 results/merge/fastq/S12_R2.fastq.gz
+-rw-rw-r-- 1 a1647910 a1647910 6086161123 Aug 22 12:01 results/merge/fastq/S12_R2.fastq.gz
 
    readsCommandsFile:
-exec > "/mnt/tmp_local/lls_2390695/tmpjswl0zp7/STARtmp/tmp.fifo.read2"
+exec > "/mnt/tmp_local/lls_2850183/tmp2rxe8v6t/STARtmp/tmp.fifo.read2"
 echo FILE 0
 gunzip   -c      "results/merge/fastq/S12_R2.fastq.gz"
 
 Created thread # 1
+Created thread # 2
 Starting to map file # 0
 mate 1:   results/merge/fastq/S12_R1.fastq.gz
 mate 2:   results/merge/fastq/S12_R2.fastq.gz
-Created thread # 2
 Created thread # 3
 Created thread # 4
 Created thread # 5
@@ -1196,73 +1196,74 @@ Created thread # 12
 Created thread # 13
 Created thread # 14
 Created thread # 15
-BAM sorting: 175157 mapped reads
+BAM sorting: 175494 mapped reads
 BAM sorting bins genomic start loci:
-1	0	34708104
-2	1	3210220
-3	1	33861020
-4	2	14751192
-5	3	4621783
-6	3	45504882
-7	4	28742689
-8	5	8218215
-9	5	45276877
-10	6	24849359
-11	7	11266239
-12	7	42322331
-13	8	15537067
-14	9	3156564
-15	9	46202817
-16	10	17386448
-17	10	25701628
-18	11	1422784
-19	11	32578843
-20	12	532308
-21	12	34797193
-22	13	1990733
-23	13	27552557
-24	14	10402563
-25	15	4900474
-26	15	35691410
-27	16	24935577
-28	17	11038825
-29	18	11586273
-30	18	31217686
-31	18	55105863
-32	19	21314767
-33	20	831675
-34	20	23273550
-35	20	40049779
-36	21	6232210
-37	21	39551866
-38	22	9824
-39	22	38316519
-40	23	4601859
-41	23	36514639
-42	24	19335098
-43	25	1068
-44	25	6700
-45	25	7608
-46	25	8578
-47	25	10025
-48	25	15028
-Thread #14 end of input stream, nextChar=-1
-Completed: thread #7
-Completed: thread #3
-Completed: thread #2
+1	0	34297103
+2	1	5000992
+3	1	34426589
+4	2	14856803
+5	3	5205116
+6	3	46981071
+7	4	28497146
+8	5	9424838
+9	5	45335330
+10	6	26901424
+11	7	12102997
+12	7	43028301
+13	8	20243074
+14	9	5505861
+15	9	46695778
+16	10	18626263
+17	10	26741587
+18	11	2161949
+19	11	33685206
+20	12	2292583
+21	12	34340150
+22	13	365844
+23	13	26731514
+24	14	5581557
+25	15	3651837
+26	15	32023302
+27	16	20942732
+28	17	7879981
+29	18	6490836
+30	18	30891154
+31	18	56346016
+32	19	21509057
+33	20	826693
+34	20	23268853
+35	20	40054650
+36	21	6272010
+37	21	40601938
+38	22	1316881
+39	22	38263864
+40	23	4702536
+41	23	35802485
+42	24	18733689
+43	25	1028
+44	25	6731
+45	25	7629
+46	25	8633
+47	25	10056
+48	25	15064
+Thread #2 end of input stream, nextChar=-1
+Completed: thread #14
 Completed: thread #8
 Completed: thread #6
-Completed: thread #10
-Completed: thread #5
-Completed: thread #4
-Completed: thread #12
-Completed: thread #9
-Completed: thread #11
-Completed: thread #13
 Completed: thread #15
+Completed: thread #11
+Completed: thread #7
+Completed: thread #4
+Completed: thread #9
+Completed: thread #12
+Completed: thread #3
+Completed: thread #13
 Completed: thread #1
 Completed: thread #0
 Joined thread # 1
+Completed: thread #5
+Completed: thread #10
+Completed: thread #2
 Joined thread # 2
 Joined thread # 3
 Joined thread # 4
@@ -1275,14 +1276,13 @@ Joined thread # 10
 Joined thread # 11
 Joined thread # 12
 Joined thread # 13
-Completed: thread #14
 Joined thread # 14
 Joined thread # 15
-Jul 03 11:45:19 ..... finished mapping
+Aug 22 13:06:50 ..... finished mapping
 RAM after mapping:
-VmPeak:	22844596 kB; VmSize:	22637284 kB; VmHWM:	21027756 kB; VmRSS:	21023020 kB; 
+VmPeak:	22844728 kB; VmSize:	22637408 kB; VmHWM:	21046228 kB; VmRSS:	21025252 kB; 
 RAM after freeing genome index memory:
-VmPeak:	22844596 kB; VmSize:	 6306744 kB; VmHWM:	21027756 kB; VmRSS:	 4872476 kB; 
-Jul 03 11:45:20 ..... started sorting BAM
-Max memory needed for sorting = 849108000
+VmPeak:	22844728 kB; VmSize:	 6306868 kB; VmHWM:	21046228 kB; VmRSS:	 4874704 kB; 
+Aug 22 13:06:51 ..... started sorting BAM
+Max memory needed for sorting = 855798986
 ALL DONE!

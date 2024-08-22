@@ -1,7 +1,7 @@
 import pandas as pd
 from snakemake.utils import min_version, validate
 
-min_version("8.4.2")
+min_version("8.14.0")
 
 
 configfile: "config/config.yaml"
@@ -159,36 +159,37 @@ def workflow_outputs():
     outputs = []
 
     ## FastQC outputs
-    for sample in samples["sample"]:
-        sample_units = units.loc[sample]
-        ## Raw
-        outputs.extend(
-            expand(
-                "results/raw_data/FastQC/{SAMPLE}_{UNIT}_{PAIRTAG}_fastqc.{EXT}",
-                SAMPLE=sample,
-                UNIT=sample_units["unit"],
-                PAIRTAG=pair_tags,
-                EXT=["html", "zip"],
+    if config["fastqc"]:
+        for sample in samples["sample"]:
+            sample_units = units.loc[sample]
+            ## Raw
+            outputs.extend(
+                expand(
+                    "results/raw_data/FastQC/{SAMPLE}_{UNIT}_{PAIRTAG}_fastqc.{EXT}",
+                    SAMPLE=sample,
+                    UNIT=sample_units["unit"],
+                    PAIRTAG=pair_tags,
+                    EXT=["html", "zip"],
+                )
             )
-        )
-        ## Trim
-        outputs.extend(
-            expand(
-                "results/trim/FastQC/{SAMPLE}_{UNIT}_{PAIRTAG}_fastqc.{EXT}",
-                SAMPLE=sample,
-                UNIT=sample_units["unit"],
-                PAIRTAG=pair_tags,
-                EXT=["html", "zip"],
+            ## Trim
+            outputs.extend(
+                expand(
+                    "results/trim/FastQC/{SAMPLE}_{UNIT}_{PAIRTAG}_fastqc.{EXT}",
+                    SAMPLE=sample,
+                    UNIT=sample_units["unit"],
+                    PAIRTAG=pair_tags,
+                    EXT=["html", "zip"],
+                )
             )
-        )
-        ## Align
-        outputs.extend(
-            expand(
-                "results/align/FastQC/{SAMPLE}_fastqc.{EXT}",
-                SAMPLE=sample,
-                EXT=["html", "zip"],
+            ## Align
+            outputs.extend(
+                expand(
+                    "results/align/FastQC/{SAMPLE}_fastqc.{EXT}",
+                    SAMPLE=sample,
+                    EXT=["html", "zip"],
+                )
             )
-        )
 
     ## md5sums
     outputs.extend(
@@ -200,9 +201,8 @@ def workflow_outputs():
     )
 
     ## Processed counts
-    outputs.append("results/count/all.featureCounts")
-    # outputs.append("resources/genome.fa")
-    # outputs.append("results/trim/fastq/S01_1_R1.fastq.gz")
-    # outputs.extend(expand("results/trim/fastq/{SAMPLE}_{UNIT}_{PAIRTAG}.fastq.gz", SAMPLE=units["sample"], UNIT=units["unit"], PAIRTAG=pair_tags))
+    strandedness_labels = ["unstranded", "stranded", "reverse"]
+    for i in config["count"]["strandedness"]:
+        outputs.append(f"results/count/{strandedness_labels[i]}/all.featureCounts")
 
     return outputs
