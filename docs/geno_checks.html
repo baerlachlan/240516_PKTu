@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.54">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Lachlan Baer">
+
+<title>PKTu</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">
+      PKTu
+      </li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">PKTu</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/baerlachlan" title="" class="quarto-navigation-tool px-1" aria-label=""><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./qc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Quality control</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./de.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Differential Expression</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gsea.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GSEA</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gsea_dar.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GSEA (DAR-corrected)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dar.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAR</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#metadata" id="toc-metadata" class="nav-link" data-scroll-target="#metadata">Metadata</a></li>
+  <li><a href="#annotations" id="toc-annotations" class="nav-link" data-scroll-target="#annotations">Annotations</a></li>
+  <li><a href="#load-data" id="toc-load-data" class="nav-link" data-scroll-target="#load-data">Load data</a></li>
+  <li><a href="#genotype-checks" id="toc-genotype-checks" class="nav-link" data-scroll-target="#genotype-checks">Genotype checks</a></li>
+  <li><a href="#session-information" id="toc-session-information" class="nav-link" data-scroll-target="#session-information">Session information</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">PKTu</h1>
+<p class="subtitle lead">Differential Expression Analysis (CQN)</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Lachlan Baer </p>
+          </div>
+  </div>
+    
+  
+    <div>
+    <div class="quarto-title-meta-heading">LAST MODIFIED</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">03 September, 2024</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="setup" class="level1">
+<h1>Setup</h1>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressPackageStartupMessages</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="do">## Common packages</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(magrittr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(here)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(kableExtra)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(RColorBrewer)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(ggpubr)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(scales)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(AnnotationHub)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(ggrepel)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(ggtext)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(glue)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(pander)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(DT)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(reactable)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># library(reactablefmtr)</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(htmltools)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="do">## Document-specific packages</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(edgeR)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(cqn)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(pheatmap)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(corrplot)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_update</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.x =</span> <span class="fu">element_markdown</span>(),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.y =</span> <span class="fu">element_markdown</span>(),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.background =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text =</span> <span class="fu">element_textbox</span>(</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">size =</span> <span class="dv">10</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">box.color =</span> <span class="st">"black"</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">halign =</span> <span class="fl">0.5</span>, <span class="at">linetype =</span> <span class="dv">1</span>, <span class="at">width =</span> <span class="fu">unit</span>(<span class="dv">1</span>, <span class="st">"npc"</span>),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">padding =</span> <span class="fu">margin</span>(<span class="dv">3</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">margin =</span> <span class="fu">margin</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>pal1 <span class="ot">&lt;-</span> <span class="fu">brewer.pal</span>(<span class="dv">12</span>, <span class="st">"Set3"</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>pal2 <span class="ot">&lt;-</span> <span class="fu">brewer.pal</span>(<span class="dv">8</span>, <span class="st">"Set2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>lb_complex_dt <span class="ot">&lt;-</span> <span class="cf">function</span>(tbl, cap, <span class="at">rownames =</span> <span class="cn">FALSE</span>){</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">datatable</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        tbl,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">caption =</span> htmltools<span class="sc">::</span>tags<span class="sc">$</span><span class="fu">caption</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>            cap,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">style =</span> <span class="st">"text-align: left;"</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">options =</span> <span class="fu">list</span>(</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">dom =</span> <span class="st">"tflipr"</span>,  <span class="co"># Available options: tflipr</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">columnDefs =</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="at">className =</span> <span class="st">'dt-left'</span>, <span class="at">targets =</span> <span class="st">"_all"</span>)),  <span class="co"># Align all columns left</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">pageLength =</span> <span class="dv">10</span>,  <span class="co"># Show all results</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">scrollCollapse =</span> <span class="cn">TRUE</span>,  <span class="co"># Removes whitespace when table is small</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">scrollY =</span> <span class="st">"100%"</span>,  <span class="co"># Sets max height of table before scrollbar is added</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">scrollX =</span> <span class="cn">TRUE</span>,  <span class="co"># Enable horizontal scrolling when too wide</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">sScrollX =</span> <span class="st">"100%"</span>,  <span class="co"># Stops last column title being cut off</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>            <span class="at">initComplete =</span> <span class="fu">JS</span>(  <span class="co"># Set font</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>                <span class="st">"function(settings, json) {"</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>                <span class="st">"$('body').css({'font-family': 'Calibri'});"</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                <span class="st">"}"</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">rownames =</span> rownames,</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">height =</span> <span class="st">"100%"</span>,  <span class="co"># Seems to work in tandem with scrollCollapse</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">width =</span> <span class="st">"100%"</span>,  <span class="co"># Fills width when viewed in RStudio viewer</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="at">class =</span> <span class="st">"stripe hover row-border order-column compact nowrap"</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>lb_reactable <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>        tbl, <span class="at">highlight =</span> <span class="cn">TRUE</span>, <span class="at">striped =</span> <span class="cn">TRUE</span>, <span class="at">compact =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">wrap =</span> <span class="cn">FALSE</span>, <span class="at">resizable =</span> <span class="cn">TRUE</span>, <span class="at">searchable =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">style =</span> <span class="fu">list</span>(<span class="at">fontFamily =</span> <span class="st">"Calibri, sans-serif"</span>), ...</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>){</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reactable</span>(</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        tbl,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">highlight =</span> highlight, <span class="at">striped =</span> striped, <span class="at">compact =</span> compact,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">wrap =</span> wrap, <span class="at">resizable =</span> <span class="cn">TRUE</span>, <span class="at">searchable =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">style =</span> style, ...</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>tooltip <span class="ot">&lt;-</span> <span class="cf">function</span>(value, tooltip) {</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    tags<span class="sc">$</span><span class="fu">abbr</span>(</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">style =</span> <span class="st">"text-decoration: underline; text-decoration-style: solid; cursor: help"</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">title =</span> tooltip,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        value</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>react_format <span class="ot">&lt;-</span> <span class="cf">function</span>(format, <span class="at">digits =</span> <span class="dv">2</span>){</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(val, ind, col_name){</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>        <span class="fu">formatC</span>(val, <span class="at">digits =</span> digits, <span class="at">format =</span> format)</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="metadata" class="level1">
+<h1>Metadata</h1>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">"misc/metadata.csv"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">geno_psen1 =</span> <span class="fu">fct_relevel</span>(geno_psen1, <span class="fu">c</span>(<span class="st">"wt"</span>, <span class="st">"eofad"</span>, <span class="st">"fai"</span>)),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">geno_chr14 =</span> <span class="fu">fct_relevel</span>(geno_chr14, <span class="fu">c</span>(<span class="st">"tu"</span>, <span class="st">"pk"</span>, <span class="st">"het"</span>)),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">geno_joint =</span> <span class="fu">fct_relevel</span>(geno_joint, <span class="fu">unique</span>(geno_joint))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>meta <span class="sc">%&gt;%</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kable</span>(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">align =</span> <span class="st">"l"</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">caption =</span> <span class="st">"Sample metadata"</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kable_styling</span>(</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>, <span class="st">"responsive"</span>)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="table-responsive">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Sample metadata</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">sample</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">fish_id</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">geno_psen1</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">geno_psen1_2</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">geno_chr14</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">geno_chr14_2</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">geno_joint</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">sex</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">sample_id</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">ULN</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">RIN</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">index_i7</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">index_i5</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">mean_size_bp</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">total_clusters_million</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">S11</td>
+<td style="text-align: left;">23</td>
+<td style="text-align: left;">eofad</td>
+<td style="text-align: left;">T428del/+</td>
+<td style="text-align: left;">tu</td>
+<td style="text-align: left;">A/B</td>
+<td style="text-align: left;">eofad_tu</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">11</td>
+<td style="text-align: left;">SAGCFN_23_00407</td>
+<td style="text-align: left;">9.4</td>
+<td style="text-align: left;">GACTACGA</td>
+<td style="text-align: left;">TTACCGAC</td>
+<td style="text-align: left;">308</td>
+<td style="text-align: left;">70.4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S20</td>
+<td style="text-align: left;">41</td>
+<td style="text-align: left;">eofad</td>
+<td style="text-align: left;">T428del/+</td>
+<td style="text-align: left;">tu</td>
+<td style="text-align: left;">A/B</td>
+<td style="text-align: left;">eofad_tu</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">20</td>
+<td style="text-align: left;">SAGCFN_23_00416</td>
+<td style="text-align: left;">8.7</td>
+<td style="text-align: left;">TACATCGG</td>
+<td style="text-align: left;">TCCGATCA</td>
+<td style="text-align: left;">298</td>
+<td style="text-align: left;">66.8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S25</td>
+<td style="text-align: left;">48</td>
+<td style="text-align: left;">eofad</td>
+<td style="text-align: left;">T428del/+</td>
+<td style="text-align: left;">tu</td>
+<td style="text-align: left;">A/B</td>
+<td style="text-align: left;">eofad_tu</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">25</td>
+<td style="text-align: left;">SAGCFN_23_00421</td>
+<td style="text-align: left;">8.7</td>
+<td style="text-align: left;">ACGGACTT</td>
+<td style="text-align: left;">ATCGGAGA</td>
+<td style="text-align: left;">301</td>
+<td style="text-align: left;">61.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S10</td>
+<td style="text-align: left;">22</td>
+<td style="text-align: left;">eofad</td>
+<td style="text-align: left;">T428del/+</td>
+<td style="text-align: left;">pk</td>
+<td style="text-align: left;">D/D</td>
+<td style="text-align: left;">eofad_pk</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">SAGCFN_23_00406</td>
+<td style="text-align: left;">9.2</td>
+<td style="text-align: left;">TCTTCGAC</td>
+<td style="text-align: left;">TACTGCTC</td>
+<td style="text-align: left;">294</td>
+<td style="text-align: left;">64.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S12</td>
+<td style="text-align: left;">25</td>
+<td style="text-align: left;">eofad</td>
+<td style="text-align: left;">T428del/+</td>
+<td style="text-align: left;">pk</td>
+<td style="text-align: left;">D/D</td>
+<td style="text-align: left;">eofad_pk</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">12</td>
+<td style="text-align: left;">SAGCFN_23_00408</td>
+<td style="text-align: left;">9.0</td>
+<td style="text-align: left;">ACTCCTAC</td>
+<td style="text-align: left;">CCGTAACT</td>
+<td style="text-align: left;">299</td>
+<td style="text-align: left;">63.6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S17</td>
+<td style="text-align: left;">31</td>
+<td style="text-align: left;">eofad</td>
+<td style="text-align: left;">T428del/+</td>
+<td style="text-align: left;">pk</td>
+<td style="text-align: left;">D/D</td>
+<td style="text-align: left;">eofad_pk</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">17</td>
+<td style="text-align: left;">SAGCFN_23_00413</td>
+<td style="text-align: left;">9.0</td>
+<td style="text-align: left;">GTACACCT</td>
+<td style="text-align: left;">GAGACCAA</td>
+<td style="text-align: left;">291</td>
+<td style="text-align: left;">75.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S04</td>
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">eofad</td>
+<td style="text-align: left;">T428del/+</td>
+<td style="text-align: left;">het</td>
+<td style="text-align: left;">B/D</td>
+<td style="text-align: left;">eofad_het</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">SAGCFN_23_00400</td>
+<td style="text-align: left;">10.0</td>
+<td style="text-align: left;">AACTCGGA</td>
+<td style="text-align: left;">TGCAAGAC</td>
+<td style="text-align: left;">293</td>
+<td style="text-align: left;">69.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S14</td>
+<td style="text-align: left;">28</td>
+<td style="text-align: left;">eofad</td>
+<td style="text-align: left;">T428del/+</td>
+<td style="text-align: left;">het</td>
+<td style="text-align: left;">B/D</td>
+<td style="text-align: left;">eofad_het</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">14</td>
+<td style="text-align: left;">SAGCFN_23_00410</td>
+<td style="text-align: left;">9.3</td>
+<td style="text-align: left;">ACCATCCT</td>
+<td style="text-align: left;">CCATGAAC</td>
+<td style="text-align: left;">296</td>
+<td style="text-align: left;">50.6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S27</td>
+<td style="text-align: left;">72</td>
+<td style="text-align: left;">eofad</td>
+<td style="text-align: left;">T428del/+</td>
+<td style="text-align: left;">het</td>
+<td style="text-align: left;">B/D</td>
+<td style="text-align: left;">eofad_het</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">27</td>
+<td style="text-align: left;">SAGCFN_23_00423</td>
+<td style="text-align: left;">9.0</td>
+<td style="text-align: left;">AACCGAAC</td>
+<td style="text-align: left;">CATACTCG</td>
+<td style="text-align: left;">288</td>
+<td style="text-align: left;">109.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S02</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">fai</td>
+<td style="text-align: left;">W233fs/+</td>
+<td style="text-align: left;">tu</td>
+<td style="text-align: left;">A/B</td>
+<td style="text-align: left;">fai_tu</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">SAGCFN_23_00398</td>
+<td style="text-align: left;">10.0</td>
+<td style="text-align: left;">AATCCAGC</td>
+<td style="text-align: left;">GCATCCTA</td>
+<td style="text-align: left;">285</td>
+<td style="text-align: left;">61.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S16</td>
+<td style="text-align: left;">30</td>
+<td style="text-align: left;">fai</td>
+<td style="text-align: left;">W233fs/+</td>
+<td style="text-align: left;">tu</td>
+<td style="text-align: left;">A/B</td>
+<td style="text-align: left;">fai_tu</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">16</td>
+<td style="text-align: left;">SAGCFN_23_00412</td>
+<td style="text-align: left;">8.8</td>
+<td style="text-align: left;">AACTTGCC</td>
+<td style="text-align: left;">CCAACTTC</td>
+<td style="text-align: left;">291</td>
+<td style="text-align: left;">67.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S19</td>
+<td style="text-align: left;">38</td>
+<td style="text-align: left;">fai</td>
+<td style="text-align: left;">W233fs/+</td>
+<td style="text-align: left;">tu</td>
+<td style="text-align: left;">A/B</td>
+<td style="text-align: left;">fai_tu</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">19</td>
+<td style="text-align: left;">SAGCFN_23_00415</td>
+<td style="text-align: left;">9.2</td>
+<td style="text-align: left;">CGACCTAA</td>
+<td style="text-align: left;">CTAACCTG</td>
+<td style="text-align: left;">295</td>
+<td style="text-align: left;">77.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S07</td>
+<td style="text-align: left;">16</td>
+<td style="text-align: left;">fai</td>
+<td style="text-align: left;">W233fs/+</td>
+<td style="text-align: left;">pk</td>
+<td style="text-align: left;">D/D</td>
+<td style="text-align: left;">fai_pk</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">SAGCFN_23_00403</td>
+<td style="text-align: left;">9.1</td>
+<td style="text-align: left;">ATGACAGG</td>
+<td style="text-align: left;">ACATGCCA</td>
+<td style="text-align: left;">298</td>
+<td style="text-align: left;">132.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S13</td>
+<td style="text-align: left;">27</td>
+<td style="text-align: left;">fai</td>
+<td style="text-align: left;">W233fs/+</td>
+<td style="text-align: left;">pk</td>
+<td style="text-align: left;">D/D</td>
+<td style="text-align: left;">fai_pk</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">13</td>
+<td style="text-align: left;">SAGCFN_23_00409</td>
+<td style="text-align: left;">8.9</td>
+<td style="text-align: left;">CTTCCTTC</td>
+<td style="text-align: left;">TTCCAGGT</td>
+<td style="text-align: left;">306</td>
+<td style="text-align: left;">75.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S26</td>
+<td style="text-align: left;">50</td>
+<td style="text-align: left;">fai</td>
+<td style="text-align: left;">W233fs/+</td>
+<td style="text-align: left;">pk</td>
+<td style="text-align: left;">D/D</td>
+<td style="text-align: left;">fai_pk</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">26</td>
+<td style="text-align: left;">SAGCFN_23_00422</td>
+<td style="text-align: left;">9.5</td>
+<td style="text-align: left;">CTAAGACC</td>
+<td style="text-align: left;">CCTAACAG</td>
+<td style="text-align: left;">294</td>
+<td style="text-align: left;">63.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S15</td>
+<td style="text-align: left;">29</td>
+<td style="text-align: left;">fai</td>
+<td style="text-align: left;">W233fs/+</td>
+<td style="text-align: left;">het</td>
+<td style="text-align: left;">B/D</td>
+<td style="text-align: left;">fai_het</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">15</td>
+<td style="text-align: left;">SAGCFN_23_00411</td>
+<td style="text-align: left;">8.7</td>
+<td style="text-align: left;">CGTCCATT</td>
+<td style="text-align: left;">TTCCTCCT</td>
+<td style="text-align: left;">293</td>
+<td style="text-align: left;">66.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S18</td>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;">fai</td>
+<td style="text-align: left;">W233fs/+</td>
+<td style="text-align: left;">het</td>
+<td style="text-align: left;">B/D</td>
+<td style="text-align: left;">fai_het</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">18</td>
+<td style="text-align: left;">SAGCFN_23_00414</td>
+<td style="text-align: left;">9.0</td>
+<td style="text-align: left;">ACGAGAAC</td>
+<td style="text-align: left;">ACAGTTCG</td>
+<td style="text-align: left;">290</td>
+<td style="text-align: left;">54.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S24</td>
+<td style="text-align: left;">47</td>
+<td style="text-align: left;">fai</td>
+<td style="text-align: left;">W233fs/+</td>
+<td style="text-align: left;">het</td>
+<td style="text-align: left;">B/D</td>
+<td style="text-align: left;">fai_het</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">24</td>
+<td style="text-align: left;">SAGCFN_23_00420</td>
+<td style="text-align: left;">9.2</td>
+<td style="text-align: left;">CTCGAACA</td>
+<td style="text-align: left;">CCAACGAA</td>
+<td style="text-align: left;">290</td>
+<td style="text-align: left;">114.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S01</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">wt</td>
+<td style="text-align: left;">+/+</td>
+<td style="text-align: left;">tu</td>
+<td style="text-align: left;">A/B</td>
+<td style="text-align: left;">wt_tu</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">SAGCFN_23_00397</td>
+<td style="text-align: left;">9.5</td>
+<td style="text-align: left;">CGCTACAT</td>
+<td style="text-align: left;">AACCTACG</td>
+<td style="text-align: left;">285</td>
+<td style="text-align: left;">59.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S05</td>
+<td style="text-align: left;">11</td>
+<td style="text-align: left;">wt</td>
+<td style="text-align: left;">+/+</td>
+<td style="text-align: left;">tu</td>
+<td style="text-align: left;">A/B</td>
+<td style="text-align: left;">wt_tu</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">SAGCFN_23_00401</td>
+<td style="text-align: left;">9.7</td>
+<td style="text-align: left;">GTCGAGAA</td>
+<td style="text-align: left;">CTTACAGC</td>
+<td style="text-align: left;">292</td>
+<td style="text-align: left;">93.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S09</td>
+<td style="text-align: left;">19</td>
+<td style="text-align: left;">wt</td>
+<td style="text-align: left;">+/+</td>
+<td style="text-align: left;">tu</td>
+<td style="text-align: left;">A/B</td>
+<td style="text-align: left;">wt_tu</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">SAGCFN_23_00405</td>
+<td style="text-align: left;">9.4</td>
+<td style="text-align: left;">CTCCTAGT</td>
+<td style="text-align: left;">CCTCATCT</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">67.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S06</td>
+<td style="text-align: left;">12</td>
+<td style="text-align: left;">wt</td>
+<td style="text-align: left;">+/+</td>
+<td style="text-align: left;">pk</td>
+<td style="text-align: left;">D/D</td>
+<td style="text-align: left;">wt_pk</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">SAGCFN_23_00402</td>
+<td style="text-align: left;">9.5</td>
+<td style="text-align: left;">ACAACAGC</td>
+<td style="text-align: left;">ACCGACAA</td>
+<td style="text-align: left;">293</td>
+<td style="text-align: left;">63.6</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S08</td>
+<td style="text-align: left;">18</td>
+<td style="text-align: left;">wt</td>
+<td style="text-align: left;">+/+</td>
+<td style="text-align: left;">pk</td>
+<td style="text-align: left;">D/D</td>
+<td style="text-align: left;">wt_pk</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">SAGCFN_23_00404</td>
+<td style="text-align: left;">8.8</td>
+<td style="text-align: left;">GCACACAA</td>
+<td style="text-align: left;">GAGCAATC</td>
+<td style="text-align: left;">280</td>
+<td style="text-align: left;">65.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S21</td>
+<td style="text-align: left;">44</td>
+<td style="text-align: left;">wt</td>
+<td style="text-align: left;">+/+</td>
+<td style="text-align: left;">pk</td>
+<td style="text-align: left;">D/D</td>
+<td style="text-align: left;">wt_pk</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">21</td>
+<td style="text-align: left;">SAGCFN_23_00417</td>
+<td style="text-align: left;">8.6</td>
+<td style="text-align: left;">ATCGTCTC</td>
+<td style="text-align: left;">AGAAGGAC</td>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">63.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S03</td>
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">wt</td>
+<td style="text-align: left;">+/+</td>
+<td style="text-align: left;">het</td>
+<td style="text-align: left;">B/D</td>
+<td style="text-align: left;">wt_het</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">SAGCFN_23_00399</td>
+<td style="text-align: left;">9.9</td>
+<td style="text-align: left;">CGTCTAAC</td>
+<td style="text-align: left;">CAACGAGT</td>
+<td style="text-align: left;">293</td>
+<td style="text-align: left;">76.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">S22</td>
+<td style="text-align: left;">45</td>
+<td style="text-align: left;">wt</td>
+<td style="text-align: left;">+/+</td>
+<td style="text-align: left;">het</td>
+<td style="text-align: left;">B/D</td>
+<td style="text-align: left;">wt_het</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">22</td>
+<td style="text-align: left;">SAGCFN_23_00418</td>
+<td style="text-align: left;">9.0</td>
+<td style="text-align: left;">CCAACACT</td>
+<td style="text-align: left;">GACGAACT</td>
+<td style="text-align: left;">284</td>
+<td style="text-align: left;">69.8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">S23</td>
+<td style="text-align: left;">46</td>
+<td style="text-align: left;">wt</td>
+<td style="text-align: left;">+/+</td>
+<td style="text-align: left;">het</td>
+<td style="text-align: left;">B/D</td>
+<td style="text-align: left;">wt_het</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">23</td>
+<td style="text-align: left;">SAGCFN_23_00419</td>
+<td style="text-align: left;">9.0</td>
+<td style="text-align: left;">TCTAGGAG</td>
+<td style="text-align: left;">TTGCAACG</td>
+<td style="text-align: left;">288</td>
+<td style="text-align: left;">114.8</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pal_group <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"eofad_tu"</span> <span class="ot">=</span> pal1[<span class="dv">1</span>], <span class="st">"eofad_pk"</span> <span class="ot">=</span> pal1[<span class="dv">2</span>], <span class="st">"eofad_het"</span> <span class="ot">=</span> pal1[<span class="dv">3</span>],</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"fai_tu"</span> <span class="ot">=</span> pal1[<span class="dv">4</span>], <span class="st">"fai_pk"</span> <span class="ot">=</span> pal1[<span class="dv">5</span>], <span class="st">"fai_het"</span> <span class="ot">=</span> pal1[<span class="dv">6</span>],</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"wt_tu"</span> <span class="ot">=</span> pal1[<span class="dv">7</span>], <span class="st">"wt_pk"</span> <span class="ot">=</span> pal1[<span class="dv">8</span>], <span class="st">"wt_het"</span> <span class="ot">=</span> pal1[<span class="dv">10</span>],</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"eofad"</span> <span class="ot">=</span> pal2[<span class="dv">1</span>], <span class="st">"fai"</span> <span class="ot">=</span> pal2[<span class="dv">2</span>], <span class="st">"wt"</span> <span class="ot">=</span> pal2[<span class="dv">3</span>],</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"pk"</span> <span class="ot">=</span> pal2[<span class="dv">4</span>], <span class="st">"tu"</span> <span class="ot">=</span> pal2[<span class="dv">5</span>], <span class="st">"het"</span> <span class="ot">=</span> pal2[<span class="dv">6</span>]</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="annotations" class="level1">
+<h1>Annotations</h1>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ens_species <span class="ot">&lt;-</span> <span class="st">"Danio rerio"</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>ens_release <span class="ot">&lt;-</span> <span class="st">"111"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>ens_assembly <span class="ot">&lt;-</span> <span class="st">"GRCz11"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ah <span class="ot">&lt;-</span> <span class="fu">AnnotationHub</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">subset</span>(species <span class="sc">==</span> ens_species) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">subset</span>(rdataclass <span class="sc">==</span> <span class="st">"EnsDb"</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>ahId <span class="ot">&lt;-</span> ah<span class="sc">$</span>ah_id[<span class="fu">str_detect</span>(ah<span class="sc">$</span>title, ens_release)]</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>ensDb <span class="ot">&lt;-</span> ah[[ahId]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>primary_chrs <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">as.character</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">25</span>), <span class="st">"MT"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>transcripts <span class="ot">&lt;-</span> <span class="fu">transcripts</span>(ensDb)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tx_len <span class="ot">&lt;-</span> <span class="fu">exonsBy</span>(ensDb, <span class="st">"tx"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">width</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">lapply</span>(sum) <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unlist</span>(<span class="at">use.names =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">enframe</span>(<span class="at">name =</span> <span class="st">"tx_id"</span>, <span class="at">value =</span> <span class="st">"length"</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">mcols</span>(transcripts) <span class="ot">&lt;-</span> <span class="fu">mcols</span>(transcripts)[</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(<span class="st">"tx_id"</span>, <span class="st">"gene_id"</span>, <span class="st">"gc_content"</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>] <span class="sc">%&gt;%</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(tx_len)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>gene_gclen <span class="ot">&lt;-</span> transcripts <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mcols</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(gene_id) <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">gc_content =</span> <span class="fu">sum</span>(gc_content<span class="sc">*</span>length) <span class="sc">/</span> <span class="fu">sum</span>(length),</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">length =</span> <span class="fu">ceiling</span>(<span class="fu">median</span>(length))</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>genes <span class="ot">&lt;-</span> <span class="fu">genes</span>(ensDb)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mcols</span>(genes) <span class="ot">&lt;-</span> <span class="fu">mcols</span>(genes)[</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(<span class="st">"gene_id"</span>, <span class="st">"gene_name"</span>, <span class="st">"gene_biotype"</span>, <span class="st">"entrezid"</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>] <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(gene_gclen)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>An <code>EnsDb</code> object was obtained for Ensembl release 111 with the <code>AnnotationHub</code> package. This contained the information required to set up gene and transcript annotations. Gene-level estimates of GC content and length were also generated which are required for assessing potential biases in downstream analysis.</p>
+</section>
+<section id="load-data" class="level1">
+<h1>Load data</h1>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dge_list <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">here</span>(<span class="st">"Rdata/dge_list.Rds"</span>))</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>tt <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">here</span>(<span class="st">"Rdata/tt.Rds"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="genotype-checks" class="level1">
+<h1>Genotype checks</h1>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cpm</span>(dge_list, <span class="at">log =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    .[<span class="st">"ENSDARG00000004870"</span>,] <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">t</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">set_rownames</span>(<span class="st">"ENSDARG00000004870"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames_to_column</span>(<span class="st">"gene_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_longer</span>(</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        <span class="sc">!</span><span class="fu">starts_with</span>(<span class="st">"gene_id"</span>), <span class="at">names_to =</span> <span class="st">"sample"</span>, <span class="at">values_to =</span> <span class="st">"logCPM"</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(dge_list<span class="sc">$</span>samples[<span class="fu">c</span>(<span class="st">"sample"</span>, <span class="st">"geno_psen1"</span>)]) <span class="sc">%&gt;%</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(dge_list<span class="sc">$</span>genes[<span class="fu">c</span>(<span class="st">"gene_id"</span>, <span class="st">"gene_name"</span>)]) <span class="sc">%&gt;%</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">gene_name =</span> <span class="fu">factor</span>(gene_name, <span class="at">levels =</span> <span class="fu">unique</span>(gene_name))) <span class="sc">%&gt;%</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(sample, logCPM, <span class="at">fill =</span> geno_psen1)) <span class="sc">+</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> pal_group) <span class="sc">+</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Sample"</span>, <span class="at">fill =</span> <span class="st">"*psen1* genotype"</span>) <span class="sc">+</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.title =</span> <span class="fu">element_markdown</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="geno_checks_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="session-information" class="level1">
+<h1>Session information</h1>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pander</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><strong>R version 4.4.1 (2024-06-14)</strong></p>
+<p><strong>Platform:</strong> x86_64-pc-linux-gnu</p>
+<p><strong>locale:</strong> <em>LC_CTYPE=en_AU.UTF-8</em>, <em>LC_NUMERIC=C</em>, <em>LC_TIME=en_AU.UTF-8</em>, <em>LC_COLLATE=en_AU.UTF-8</em>, <em>LC_MONETARY=en_AU.UTF-8</em>, <em>LC_MESSAGES=en_AU.UTF-8</em>, <em>LC_PAPER=en_AU.UTF-8</em>, <em>LC_NAME=C</em>, <em>LC_ADDRESS=C</em>, <em>LC_TELEPHONE=C</em>, <em>LC_MEASUREMENT=en_AU.UTF-8</em> and <em>LC_IDENTIFICATION=C</em></p>
+<p><strong>attached base packages:</strong> <em>stats4</em>, <em>splines</em>, <em>stats</em>, <em>graphics</em>, <em>grDevices</em>, <em>utils</em>, <em>datasets</em>, <em>methods</em> and <em>base</em></p>
+<p><strong>other attached packages:</strong> <em>ensembldb(v.2.28.0)</em>, <em>AnnotationFilter(v.1.28.0)</em>, <em>GenomicFeatures(v.1.56.0)</em>, <em>AnnotationDbi(v.1.66.0)</em>, <em>Biobase(v.2.64.0)</em>, <em>GenomicRanges(v.1.56.1)</em>, <em>GenomeInfoDb(v.1.40.1)</em>, <em>IRanges(v.2.38.1)</em>, <em>S4Vectors(v.0.42.1)</em>, <em>corrplot(v.0.94)</em>, <em>pheatmap(v.1.0.12)</em>, <em>cqn(v.1.50.0)</em>, <em>quantreg(v.5.98)</em>, <em>SparseM(v.1.84-2)</em>, <em>preprocessCore(v.1.66.0)</em>, <em>nor1mix(v.1.3-3)</em>, <em>mclust(v.6.1.1)</em>, <em>edgeR(v.4.2.1)</em>, <em>limma(v.3.60.4)</em>, <em>htmltools(v.0.5.8.1)</em>, <em>reactable(v.0.4.4)</em>, <em>DT(v.0.33)</em>, <em>pander(v.0.6.5)</em>, <em>glue(v.1.7.0)</em>, <em>ggtext(v.0.1.2)</em>, <em>ggrepel(v.0.9.5)</em>, <em>AnnotationHub(v.3.12.0)</em>, <em>BiocFileCache(v.2.12.0)</em>, <em>dbplyr(v.2.5.0)</em>, <em>BiocGenerics(v.0.50.0)</em>, <em>scales(v.1.3.0)</em>, <em>ggpubr(v.0.6.0)</em>, <em>RColorBrewer(v.1.1-3)</em>, <em>kableExtra(v.1.4.0)</em>, <em>here(v.1.0.1)</em>, <em>magrittr(v.2.0.3)</em>, <em>lubridate(v.1.9.3)</em>, <em>forcats(v.1.0.0)</em>, <em>stringr(v.1.5.1)</em>, <em>dplyr(v.1.1.4)</em>, <em>purrr(v.1.0.2)</em>, <em>readr(v.2.1.5)</em>, <em>tidyr(v.1.3.1)</em>, <em>tibble(v.3.2.1)</em>, <em>ggplot2(v.3.5.1)</em> and <em>tidyverse(v.2.0.0)</em></p>
+<p><strong>loaded via a namespace (and not attached):</strong> <em>rstudioapi(v.0.16.0)</em>, <em>jsonlite(v.1.8.8)</em>, <em>farver(v.2.1.2)</em>, <em>rmarkdown(v.2.28)</em>, <em>BiocIO(v.1.14.0)</em>, <em>zlibbioc(v.1.50.0)</em>, <em>vctrs(v.0.6.5)</em>, <em>Rsamtools(v.2.20.0)</em>, <em>memoise(v.2.0.1)</em>, <em>RCurl(v.1.98-1.16)</em>, <em>rstatix(v.0.7.2)</em>, <em>S4Arrays(v.1.4.1)</em>, <em>curl(v.5.2.1)</em>, <em>broom(v.1.0.6)</em>, <em>SparseArray(v.1.4.8)</em>, <em>htmlwidgets(v.1.6.4)</em>, <em>cachem(v.1.1.0)</em>, <em>commonmark(v.1.9.1)</em>, <em>GenomicAlignments(v.1.40.0)</em>, <em>mime(v.0.12)</em>, <em>lifecycle(v.1.0.4)</em>, <em>pkgconfig(v.2.0.3)</em>, <em>Matrix(v.1.7-0)</em>, <em>R6(v.2.5.1)</em>, <em>fastmap(v.1.2.0)</em>, <em>MatrixGenerics(v.1.16.0)</em>, <em>GenomeInfoDbData(v.1.2.12)</em>, <em>digest(v.0.6.37)</em>, <em>colorspace(v.2.1-1)</em>, <em>rprojroot(v.2.0.4)</em>, <em>RSQLite(v.2.3.7)</em>, <em>labeling(v.0.4.3)</em>, <em>filelock(v.1.0.3)</em>, <em>fansi(v.1.0.6)</em>, <em>timechange(v.0.3.0)</em>, <em>httr(v.1.4.7)</em>, <em>abind(v.1.4-5)</em>, <em>compiler(v.4.4.1)</em>, <em>bit64(v.4.0.5)</em>, <em>withr(v.3.0.1)</em>, <em>backports(v.1.5.0)</em>, <em>BiocParallel(v.1.38.0)</em>, <em>carData(v.3.0-5)</em>, <em>DBI(v.1.2.3)</em>, <em>highr(v.0.11)</em>, <em>ggsignif(v.0.6.4)</em>, <em>MASS(v.7.3-61)</em>, <em>DelayedArray(v.0.30.1)</em>, <em>rappdirs(v.0.3.3)</em>, <em>rjson(v.0.2.22)</em>, <em>tools(v.4.4.1)</em>, <em>restfulr(v.0.0.15)</em>, <em>gridtext(v.0.1.5)</em>, <em>grid(v.4.4.1)</em>, <em>generics(v.0.1.3)</em>, <em>gtable(v.0.3.5)</em>, <em>tzdb(v.0.4.0)</em>, <em>hms(v.1.1.3)</em>, <em>xml2(v.1.3.6)</em>, <em>car(v.3.1-2)</em>, <em>utf8(v.1.2.4)</em>, <em>XVector(v.0.44.0)</em>, <em>markdown(v.1.13)</em>, <em>BiocVersion(v.3.19.1)</em>, <em>pillar(v.1.9.0)</em>, <em>vroom(v.1.6.5)</em>, <em>lattice(v.0.22-6)</em>, <em>survival(v.3.7-0)</em>, <em>rtracklayer(v.1.64.0)</em>, <em>bit(v.4.0.5)</em>, <em>tidyselect(v.1.2.1)</em>, <em>locfit(v.1.5-9.10)</em>, <em>Biostrings(v.2.72.1)</em>, <em>knitr(v.1.48)</em>, <em>ProtGenerics(v.1.36.0)</em>, <em>SummarizedExperiment(v.1.34.0)</em>, <em>svglite(v.2.1.3)</em>, <em>xfun(v.0.47)</em>, <em>statmod(v.1.5.0)</em>, <em>matrixStats(v.1.3.0)</em>, <em>stringi(v.1.8.4)</em>, <em>UCSC.utils(v.1.0.0)</em>, <em>lazyeval(v.0.2.2)</em>, <em>yaml(v.2.3.10)</em>, <em>codetools(v.0.2-20)</em>, <em>evaluate(v.0.24.0)</em>, <em>BiocManager(v.1.30.24)</em>, <em>cli(v.3.6.3)</em>, <em>systemfonts(v.1.1.0)</em>, <em>munsell(v.0.5.1)</em>, <em>Rcpp(v.1.0.13)</em>, <em>png(v.0.1-8)</em>, <em>XML(v.3.99-0.17)</em>, <em>parallel(v.4.4.1)</em>, <em>MatrixModels(v.0.5-3)</em>, <em>blob(v.1.2.4)</em>, <em>bitops(v.1.0-8)</em>, <em>viridisLite(v.0.4.2)</em>, <em>crayon(v.1.5.3)</em>, <em>rlang(v.1.1.4)</em> and <em>KEGGREST(v.1.44.1)</em></p>
+</div>
+</div>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -29,8 +29,6 @@ knitr::opts_chunk$set(
 
 # Setup
 
-Load libraries and set global options.
-
 ```{r packages}
 suppressPackageStartupMessages({
   ## Common
@@ -354,14 +352,14 @@ assignFeatureDar <- function(dar, features, dar_val, fill_missing) {
 ---
 
 ```{r}
-vcf <- file.path("smk-variants/results/variation/vcf/snvs.final.vcf")
+vcf <- here("smk-variants/results/variation/vcf/snvs.final.vcf")
 groups <- list(
-  eofad = metadata$sample[metadata$genotype_psen1 == "eofad"],
-  fai = metadata$sample[metadata$genotype_psen1 == "fai"],
-  wt = metadata$sample[metadata$genotype_psen1 == "wt"],
-  tu = metadata$sample[metadata$genotype_chr14 == "tu"],
-  pk = metadata$sample[metadata$genotype_chr14 == "pk"],
-  het = metadata$sample[metadata$genotype_chr14 == "het"]
+  eofad = meta$sample[meta$geno_psen1 == "eofad"],
+  fai = meta$sample[meta$geno_psen1 == "fai"],
+  wt = meta$sample[meta$geno_psen1 == "wt"],
+  tu = meta$sample[meta$geno_chr14 == "tu"],
+  pk = meta$sample[meta$geno_chr14 == "pk"],
+  het = meta$sample[meta$geno_chr14 == "het"]
 )
 contrasts <- makeContrasts(
   eofad_vs_wt = eofad - wt,
@@ -378,40 +376,40 @@ region_loci <- 5
 ```{r}
 gts <- tadar::readGenotypes(vcf, genome = genome(genes)) %>%
   subsetByOverlaps(as(seqinfo(genes), "GRanges")) %>%
-  keepStandardChromosomes()
-seqinfo(gts) <- seqinfo(genes)
+  keepStandardChromosomes(pruning.mode = "coarse")
 props <- gts %>%
   tadar::countAlleles(groups = groups) %>%
-  tadar::filterLoci() %>%
+  tadar::filterLoci(n_called == 18) %>%
   tadar::countsToProps()
+dar <- dar(props, contrasts = contrasts, region_fixed = 1e4)
 ```
 
 ```{r}
-## 1e3: 3.03 hours / 11.2 mins
-lapply(colnames(contrasts[,-(1:3)]), function(x){
-  print(paste("Beginning comparison", x))
-  start_time <- Sys.time()
-  dar_test <- dar(props = props, contrasts = contrasts[,x,drop = FALSE], region_fixed = 1e4)
-  end_time <- Sys.time()
-  time_taken <- round(end_time - start_time, 2)
-  print(time_taken)
-  saveRDS(dar_test, here(paste0("R/data/dar_1e4_", x, ".Rds")))
-})
+# ## 1e3: 3.03 hours / 11.2 mins
+# lapply(colnames(contrasts[,-(1:3)]), function(x){
+#   print(paste("Beginning comparison", x))
+#   start_time <- Sys.time()
+#   dar_test <- dar(props = props, contrasts = contrasts[,x,drop = FALSE], region_fixed = 1e4)
+#   end_time <- Sys.time()
+#   time_taken <- round(end_time - start_time, 2)
+#   print(time_taken)
+#   saveRDS(dar_test, here(paste0("R/data/dar_1e4_", x, ".Rds")))
+# })
 ```
 
 ```{r}
-dar_1e4 <- lapply(colnames(contrasts), function(x){
-  readRDS(here(paste0("R/data/dar_1e4_", x, ".Rds"))) %>%
-    unlist(use.names = FALSE)
-}) %>%
-  GRangesList() %>%
-  setNames(colnames(contrasts))
-dar_1e6 <- lapply(colnames(contrasts), function(x){
-  readRDS(here(paste0("R/data/dar_1e6_", x, ".Rds"))) %>%
-    unlist(use.names = FALSE)
-}) %>%
-  GRangesList() %>%
-  setNames(colnames(contrasts))
+# dar_1e4 <- lapply(colnames(contrasts), function(x){
+#   readRDS(here(paste0("R/data/dar_1e4_", x, ".Rds"))) %>%
+#     unlist(use.names = FALSE)
+# }) %>%
+#   GRangesList() %>%
+#   setNames(colnames(contrasts))
+# dar_1e6 <- lapply(colnames(contrasts), function(x){
+#   readRDS(here(paste0("R/data/dar_1e6_", x, ".Rds"))) %>%
+#     unlist(use.names = FALSE)
+# }) %>%
+#   GRangesList() %>%
+#   setNames(colnames(contrasts))
 ```
 
 ```{r}

@@ -1,0 +1,3395 @@
+---
+title: "240516_PKTu"
+subtitle: "Gene Set Enrichment Analysis (GSEA)"
+author: "Lachlan Baer"
+date-modified: today
+date-format: "DD MMMM, YYYY"
+modified-title: "LAST MODIFIED"
+code-fold: true
+fig-width: 8
+fig-height: 6
+fig-align: center
+editor_options: 
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE,
+    message = FALSE,
+    warning = FALSE,
+    error = FALSE,
+    fig.align = "center"
+)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+```{r pkgs}
+suppressPackageStartupMessages({
+    ## Common packages
+    library(tidyverse)
+    library(magrittr)
+    library(here)
+    library(kableExtra)
+    library(RColorBrewer)
+    library(ggpubr)
+    library(scales)
+    library(AnnotationHub)
+    library(ggrepel)
+    library(ggtext)
+    library(glue)
+    library(pander)
+    library(DT)
+    library(reactable)
+    library(htmltools)
+    ## Document-specific packages
+    library(msigdbr)
+    library(fgsea)
+    library(limma)
+    library(goseq)
+    library(ggraph)
+    library(tidygraph)
+    library(ComplexHeatmap)
+    library(tadar)
+})
+```
+
+```{r opts}
+theme_set(theme_bw())
+theme_update(
+    axis.title.x = element_markdown(),
+    axis.title.y = element_markdown(),
+    strip.background = element_blank(),
+    strip.text = element_textbox(
+        size = 10,
+        color = "black", fill = "white", box.color = "black",
+        halign = 0.5, linetype = 1, width = unit(1, "npc"),
+        padding = margin(3, 0, 1, 0), margin = margin(0, 0, 0, 0)
+    )
+)
+pal <- brewer.pal(8, "Set2")
+```
+
+```{r lb_reactable}
+lb_reactable <- function(
+        tbl, highlight = TRUE, striped = TRUE, compact = TRUE,
+        wrap = FALSE, resizable = TRUE, searchable = TRUE,
+        style = list(fontFamily = "Calibri, sans-serif"), ...
+){
+    reactable(
+        tbl,
+        highlight = highlight, striped = striped, compact = compact,
+        wrap = wrap, resizable = TRUE, searchable = TRUE,
+        style = style, ...
+    )
+}
+tooltip <- function(value, tooltip) {
+    tags$abbr(
+        style = "text-decoration: underline; text-decoration-style: solid; cursor: help",
+        title = tooltip,
+        value
+    )
+}
+react_format <- function(format, digits = 2){
+    function(val, ind, col_name){
+        formatC(val, digits = digits, format = format)
+    }
+}
+```
+
+# Metadata
+
+```{r meta}
+meta <- read_csv(here("misc/metadata.csv")) %>%
+    mutate(
+        geno_psen1 = fct_relevel(geno_psen1, c("wt", "eofad", "fai")),
+        geno_chr14 = fct_relevel(geno_chr14, c("tu", "pk", "het")),
+        geno_joint = fct_relevel(geno_joint, unique(geno_joint))
+    )
+meta %>%
+    kable(
+        align = "l",
+        caption = "Sample metadata"
+    ) %>%
+    kable_styling(
+        bootstrap_options = c("striped", "hover", "condensed", "responsive")
+    )
+```
+
+```{r pal_group}
+pal1 <- brewer.pal(12, "Set3")
+pal2 <- brewer.pal(8, "Set2")
+pal_group <- c(
+    "eofad_tu" = pal1[1], "eofad_pk" = pal1[2], "eofad_het" = pal1[3],
+    "fai_tu" = pal1[4], "fai_pk" = pal1[5], "fai_het" = pal1[6],
+    "wt_tu" = pal1[7], "wt_pk" = pal1[8], "wt_het" = pal1[10],
+    "eofad" = pal2[1], "fai" = pal2[2], "wt" = pal2[3],
+    "pk" = pal2[4], "tu" = pal2[5], "het" = pal2[6]
+) 
+```
+
+# Annotations
+
+```{r ensParams}
+ens_species <- "Danio rerio"
+ens_release <- "111"
+ens_assembly <- "GRCz11"
+```
+
+```{r ensDb}
+ah <- AnnotationHub() %>%
+    subset(species == ens_species) %>%
+    subset(rdataclass == "EnsDb")
+ahId <- ah$ah_id[str_detect(ah$title, ens_release)]
+ensDb <- ah[[ahId]]
+```
+
+```{r primary_chrs}
+primary_chrs <- c(as.character(1:25), "MT")
+```
+
+```{r transcripts}
+transcripts <- transcripts(ensDb)
+tx_len <- exonsBy(ensDb, "tx") %>%
+    width() %>%
+    lapply(sum) %>%
+    unlist(use.names = TRUE) %>%
+    enframe(name = "tx_id", value = "length")
+mcols(transcripts) <- mcols(transcripts)[
+    c("tx_id", "gene_id", "gc_content")
+] %>%
+    as.data.frame() %>%
+    left_join(tx_len)
+```
+
+```{r gene_gclen}
+gene_gclen <- transcripts %>%
+    mcols() %>%
+    as_tibble() %>%
+    group_by(gene_id) %>%
+    summarise(
+        gc_content = sum(gc_content*length) / sum(length),
+        length = ceiling(median(length))
+    )
+```
+
+```{r genes}
+genes <- genes(ensDb)
+mcols(genes) <- mcols(genes)[
+    c("gene_id", "gene_name", "gene_biotype", "entrezid")
+] %>%
+    as.data.frame() %>%
+    left_join(gene_gclen)
+```
+
+An `EnsDb` object was obtained for Ensembl release `r ens_release` with the `AnnotationHub` package.
+This contained the information required to set up gene and transcript annotations.
+Gene-level estimates of GC content and length were also generated which are required for assessing potential biases in downstream analysis.
+
+# DE data
+
+Load data from the preceeding DE analysis
+
+```{r load_data}
+tt <- readRDS(here("Rdata/tt.Rds")) %>%
+    lapply(dplyr::filter, chr %in% primary_chrs)
+```
+
+# DAR data
+
+```{r}
+dar <- readRDS(here("Rdata/dar_1e4.Rds"))
+gene_dar <- flipRanges(dar) %>%
+    assignFeatureDar(genes, dar_val = "region", fill_missing = 0)
+saveRDS(gene_dar, here("Rdata/gene_dar_1e4.Rds"))
+```
+
+# Gene sets
+
+Multiple gene set databases were accessed with the `msigdbr` package.
+For this analysis the Hallmark, KEGG and Wikipathways gene sets were chosen.
+
+The `babelgene` and `msigdbr` package versions dictate the resulting gene sets, and therefore the gene sets were saved in the project directory after initial loading.
+This avoids reproducibility problems when re-running the analysis in the future.
+The gene sets in this analysis were obtained using `babelgene v22.9` and `msigdbr v7.5.1`.
+
+```{r hm}
+hm_path <- here("Rdata/hm.csv")
+if (!file.exists(hm_path)) {
+    hm <- msigdbr(ens_species, category = "H") %>%
+        dplyr::filter(!is.na(ensembl_gene)) %>%
+        distinct(gs_name, ensembl_gene, .keep_all = TRUE) %>%
+        mutate(gs_name = str_remove(gs_name, "^HALLMARK_"))
+    write_csv(hm, hm_path)
+} else {
+    hm <- read_csv(hm_path)
+}
+hm_by_gene <- hm %>%
+    split(f = .$ensembl_gene) %>%
+    lapply(extract2, "gs_name")
+hm_by_id <- hm %>%
+    split(f = .$gs_name) %>%
+    lapply(extract2, "ensembl_gene")
+```
+
+The Hallmark gene sets consists of `r length(hm_by_id)` gene sets ranging from sizes of `r min(sapply(hm_by_id, length))` to `r max(sapply(hm_by_id, length))` genes.
+
+```{r kg}
+kg_path <- here("Rdata/kg.csv")
+if (!file.exists(kg_path)) {
+    kg <- msigdbr(ens_species, category = "C2", subcategory = "CP:KEGG") %>%
+        dplyr::filter(!is.na(ensembl_gene)) %>%
+        distinct(gs_name, ensembl_gene, .keep_all = TRUE) %>%
+        mutate(gs_name = str_remove(gs_name, "^KEGG_"))
+    write_csv(kg, kg_path)
+} else {
+    kg <- read_csv(kg_path)
+}
+kg_by_gene <- kg %>%
+    split(f = .$ensembl_gene) %>%
+    lapply(extract2, "gs_name")
+kg_by_id <- kg %>%
+    split(f = .$gs_name) %>%
+    lapply(extract2, "ensembl_gene")
+```
+
+The KEGG gene sets consists of `r length(kg_by_id)` gene sets ranging from sizes of `r min(sapply(kg_by_id, length))` to `r max(sapply(kg_by_id, length))` genes.
+
+```{r wk}
+wk_path <- here("Rdata/wk.csv")
+if (!file.exists(wk_path)) {
+    wk <- msigdbr(ens_species, category = "C2", subcategory = "CP:WIKIPATHWAYS") %>%
+        dplyr::filter(!is.na(ensembl_gene)) %>%
+        distinct(gs_name, ensembl_gene, .keep_all = TRUE) %>%
+        mutate(gs_name = str_remove(gs_name, "^WP_"))
+    write_csv(wk, wk_path)
+} else {
+    wk <- read_csv(wk_path)
+}
+wk_by_gene <- wk %>%
+    split(f = .$ensembl_gene) %>%
+    lapply(extract2, "gs_name")
+wk_by_id <- wk %>%
+    split(f = .$gs_name) %>%
+    lapply(extract2, "ensembl_gene")
+```
+
+The Wikipathways gene sets consists of `r length(wk_by_id)` gene sets ranging from sizes of `r min(sapply(wk_by_id, length))` to `r max(sapply(wk_by_id, length))` genes.
+
+```{r rtm}
+rtm_path <- here("Rdata/rtm.csv")
+if (!file.exists(rtm_path)) {
+    rtm <- msigdbr(ens_species, category = "C2", subcategory = "CP:REACTOME") %>%
+        dplyr::filter(!is.na(ensembl_gene)) %>%
+        distinct(gs_name, ensembl_gene, .keep_all = TRUE) %>%
+        mutate(gs_name = str_remove(gs_name, "^REACTOME_"))
+    write_csv(rtm, rtm_path)
+} else {
+    rtm <- read_csv(rtm_path)
+}
+rtm_by_gene <- rtm %>%
+    split(f = .$ensembl_gene) %>%
+    lapply(extract2, "gs_name")
+rtm_by_id <- rtm %>%
+    split(f = .$gs_name) %>%
+    lapply(extract2, "ensembl_gene")
+```
+
+The Reactome gene sets consists of `r length(rtm_by_id)` gene sets ranging from sizes of `r min(sapply(rtm_by_id, length))` to `r max(sapply(rtm_by_id, length))` genes.
+
+# GSEA
+
+```{r}
+## Add all our results to this list for easy export
+gsea <- list()
+```
+
+```{r gsea_node_network}
+gsea_node_network <- function(gsea, directional = TRUE, debug = FALSE){
+    
+    if (debug) browser()
+    
+    sig <- gsea %>%
+        dplyr::filter(Sig)
+    
+    colours <- hue_pal()(nrow(sig)) %>%
+        set_names(sig$Pathway) %>%
+        c(
+            "None" = "black",
+            "Up" = "darkblue",
+            "Down" = "darkred"
+        )
+    
+    p_net <- sig %>%
+        dplyr::select(Pathway, leadingEdge) %>%
+        mutate(
+            leadingEdge = lapply(leadingEdge, \(x){
+                sort(genes$gene_name[genes$gene_id %in% x])
+            })
+        ) %>%
+        unnest(cols = "leadingEdge") %>%
+        as_tbl_graph() %>%
+        activate("nodes") %>%
+        mutate(
+            Edge = vapply(
+                name,
+                \(x){
+                    ifelse(
+                        x %in% gsea$Pathway,
+                        gsea$Edge[gsea$Pathway == x],
+                        1
+                    )
+                },
+                numeric(1)
+            ),
+            pval = vapply(
+                name,
+                \(x){
+                    ifelse(
+                        x %in% gsea$Pathway,
+                        gsea$pval[gsea$Pathway == x],
+                        1
+                    )
+                },
+                numeric(1)
+            ),
+            is_pathway = name %in% gsea$Pathway,
+            pathway = ifelse(is_pathway, name, "None")
+        )
+    
+    if (directional) {
+        p_net <- p_net %>%
+            mutate(
+                Direction = vapply(
+                    name,
+                    \(x){
+                        ifelse(
+                            x %in% gsea$Pathway,
+                            gsea$Direction[gsea$Pathway == x],
+                            ""
+                        )
+                    },
+                    character(1)
+                )
+            )
+    } else {
+        p_net <- p_net %>%
+            mutate(Direction = "None")
+    }
+    
+    p_net <- p_net %>%
+        activate("edges") %>%
+        mutate(
+            from_pathway = gsea$Pathway[from]
+        ) %>%
+        ggraph(layout = "kk") +
+        geom_edge_link(aes(colour = from_pathway), alpha = 0.2) +
+        geom_node_point(aes(size = -log10(pval), fill = pathway), colour = "black", shape = 21) +
+        geom_node_text(
+            aes(label = name, colour = Direction),
+            data = . %>% 
+                dplyr::filter(name %in% gsea$Pathway) %>%
+                mutate(
+                    name = str_replace_all(name, "_", " ") %>%
+                        str_trunc(width = 40) %>%
+                        str_wrap(width = 20)
+                ),
+            size = 3, repel = TRUE, bg.color = "white", bg.r = 0.1
+        ) +
+        scale_colour_manual(values = colours) +
+        scale_fill_manual(values = colours) +
+        scale_edge_colour_manual(values = colours) +
+        theme_void() +
+        guides(edge_alpha = "none", edge_width = "none") +
+        scale_x_continuous(expand = expansion(c(0.05, 0.05))) +
+        scale_y_continuous(expand = expansion(c(0.05, 0.05))) +
+        theme(legend.position = "none")
+    
+    p_net
+    
+}
+```
+
+```{r gsea_edge_network}
+gsea_edge_network <- function(gsea, directional = TRUE, debug = FALSE){
+    
+    if (debug) browser()
+    
+    sig <- gsea %>%
+        dplyr::filter(Sig)
+    
+    colours <- hue_pal()(nrow(sig)) %>%
+        set_names(sig$Pathway) %>%
+        c(
+            "None" = "black",
+            "Up" = "darkblue",
+            "Down" = "darkred"
+        )
+    
+    p_net <- lapply(seq_along(sig$Pathway), \(i){
+        path <- sig$Pathway[i]
+        le_path <- unlist(sig$leadingEdge[sig$Pathway == path])
+        remaining <- sig$Pathway[(i):length(sig$Pathway)]
+        lapply(remaining, \(x){
+            le_x <- unlist(sig$leadingEdge[sig$Pathway == x])
+            overlap <- length(intersect(le_path, le_x))
+            tibble(from = path, to = x, n = overlap)
+        }) %>%
+            bind_rows()
+    }) %>%
+        bind_rows() %>%
+        dplyr::filter(n > 0) %>%
+        as_tbl_graph() %>%
+        activate("nodes") %>%
+        mutate(
+            pval = vapply(
+                name,
+                \(x){
+                    ifelse(
+                        x %in% gsea$Pathway,
+                        gsea$pval[gsea$Pathway == x],
+                        1
+                    )
+                },
+                numeric(1)
+            )
+        )
+    
+    if (directional) {
+        p_net <- p_net %>%
+            mutate(
+                Direction = vapply(
+                    name, \(x){gsea$Direction[gsea$Pathway == x]}, character(1)
+                )
+            )
+    } else {
+        p_net <- p_net %>%
+            mutate(Direction = "None")
+    }
+    
+    p_net <- p_net %>%
+        ggraph(layout = "kk") +
+        geom_edge_link(aes(alpha = n)) +
+        geom_node_point(aes(size = -log10(pval), fill = name), colour = "black", shape = 21) +
+        geom_node_text(
+            aes(label = name, colour = Direction),
+            data = . %>% 
+                mutate(
+                    name = str_replace_all(name, "_", " ") %>%
+                        str_trunc(width = 30)
+                ),
+            size = 2.5, repel = TRUE, bg.color = "white", bg.r = 0.1
+        ) +
+        scale_colour_manual(values = colours) +
+        scale_fill_manual(values = colours) +
+        theme_void() +
+        guides(edge_alpha = "none", edge_width = "none") +
+        scale_x_continuous(expand = expansion(c(0.05, 0.05))) +
+        scale_y_continuous(expand = expansion(c(0.05, 0.05))) +
+        theme(legend.position = "none")
+    
+    p_net
+    
+}
+```
+
+## Directional GSEA
+
+Directional GSEA was performed using a ranked list of genes ordered by significance of DE analysis.
+Here the most significantly upregulated genes are found at one end of the list, while the most significantly down-regulated genes are found at the other.
+
+```{r ranks_before}
+ranks_before <- lapply(tt, \(x){
+    x %>%
+        mutate(stat = -log10(PValue) * sign(logFC)) %>%
+        dplyr::arrange(desc(stat)) %>%
+        with(structure(stat, names = gene_id))
+})
+```
+
+```{r}
+tt_dar <- names(tt) %>%
+    lapply(\(x){
+        tt[[x]] %>%
+            dplyr::filter(chr %in% primary_chrs) %>%
+            left_join(as_tibble(gene_dar[[x]])[,c("gene_id", "dar")]) %>%
+            mutate(darP = pbeta(PValue, pmax(1 - 1.8 * dar, 0.1), 1)) %>%
+            dplyr::arrange(darP)
+    }) %>%
+    set_names(names(tt))
+```
+
+```{r ranks_d}
+ranks_d <- lapply(tt_dar, \(x){
+    x %>%
+        mutate(stat = -log10(darP) * sign(logFC)) %>%
+        dplyr::arrange(desc(stat)) %>%
+        with(structure(stat, names = gene_id))
+})
+```
+
+```{r}
+rank_comparison <- names(ranks_d) %>%
+    lapply(\(x){
+        # browser()
+        before <- enframe(
+            ranks_before[[x]],
+            name = "gene_id",
+            value = "stat"
+        ) %>%
+            dplyr::arrange(desc(stat)) %>%
+            mutate(rank_before = row_number()) %>%
+            dplyr::select(gene_id, rank_before)
+        after <- enframe(
+            ranks_d[[x]],
+            name = "gene_id",
+            value = "stat"
+        ) %>%
+            dplyr::arrange(desc(stat)) %>%
+            mutate(rank_after = row_number()) %>%
+            dplyr::select(gene_id, rank_after)
+        left_join(before, after) %>%
+            mutate(contrast = x)
+    }) %>%
+    set_names(names(ranks_d))
+```
+
+```{r}
+rank_comparison %>%
+    bind_rows() %>%
+    ggplot(aes(rank_before, rank_after)) +
+    geom_point() +
+    facet_wrap(~contrast, ncol = 3)
+```
+
+```{r}
+p_comparison <- names(tt) %>%
+    lapply(\(x){
+        before <- tt[[x]] %>%
+            dplyr::select(gene_id, before_p = PValue)
+        after <- tt_dar[[x]] %>%
+            dplyr::select(gene_id, after_p = darP)
+        left_join(before, after) %>%
+            mutate(contrast = x)
+    })
+```
+
+```{r}
+p_comparison %>%
+    bind_rows() %>%
+    ggplot(aes(-log10(before_p), -log10(after_p))) +
+    geom_point() +
+    geom_abline(slope = 1) +
+    facet_wrap(~contrast, ncol = 3, scales = "free")
+```
+
+### Hallmark
+
+```{r gsea_d_hm}
+set.seed(2409)
+gsea$d$hm <- lapply(ranks_d, \(x){
+    fgseaMultilevel(hm_by_id, x) %>%
+        as_tibble() %>%
+        dplyr::rename(FDR = padj, Pathway = pathway) %>%
+        dplyr::arrange(pval) %>%
+        mutate(
+            Edge = vapply(leadingEdge, length, numeric(1)),
+            Direction = case_when(
+                sign(ES) == 1 ~ "Up",
+                sign(ES) == -1 ~ "Down",
+                sign(ES) == 0 ~ "None"
+            ),
+            bonf.padj = p.adjust(pval, "bonferroni"),
+            Sig = FDR < 0.05,
+        )
+})
+```
+
+#### EOfAD vs WT
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_hm_eofad_wt}
+id <- "gsea_d_hm_eofad_wt"
+tbl <- gsea$d$hm$eofad_wt %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_hm_d_eofad_wt}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$hm$eofad_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_hm_d_eofad_wt}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$hm$eofad_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### fAI vs WT
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_hm_fai_wt}
+id <- "gsea_d_hm_fai_wt"
+tbl <- gsea$d$hm$fai_wt %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_hm_d_fai_wt}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$hm$fai_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_hm_d_fai_wt}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$hm$fai_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### EOfAD vs fAI
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_hm_eofad_fai}
+id <- "gsea_d_hm_eofad_fai"
+tbl <- gsea$d$hm$eofad_fai %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_hm_d_eofad_fai}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$hm$eofad_fai
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_hm_d_eofad_fai}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$hm$eofad_fai
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### PK vs Tu
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_hm_pk_tu}
+id <- "gsea_d_hm_pk_tu"
+tbl <- gsea$d$hm$pk_tu %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_hm_d_pk_tu}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$hm$pk_tu
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_hm_d_pk_tu}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$hm$pk_tu
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### PK vs het
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_hm_pk_het}
+id <- "gsea_d_hm_pk_het"
+tbl <- gsea$d$hm$pk_het %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_hm_d_pk_het}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$hm$pk_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_hm_d_pk_het}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$hm$pk_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### Tu vs het
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_hm_tu_het}
+id <- "gsea_d_hm_tu_het"
+tbl <- gsea$d$hm$tu_het %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_hm_d_tu_het}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$hm$tu_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_hm_d_tu_het}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$hm$tu_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+<!-- #### Comparison -->
+
+<!-- ```{r heat_hm_d} -->
+<!-- tbl <- gsea$d$hm$eofad_wt %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt = NES, sig_eofad_wt = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$hm$fai_wt) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$hm$eofad_fai) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$hm$pk_tu) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$hm$pk_het) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu, sig_pk_het = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$hm$tu_het) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het, tu_het = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu, sig_pk_het, sig_tu_het = Sig -->
+<!--     ) %>% -->
+<!--     mutate( -->
+<!--         Pathway = str_trunc(str_replace_all(Pathway, "_", " "), 30), -->
+<!--         sig_any = as.logical(pmax( -->
+<!--             sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--             sig_pk_tu, sig_pk_het, sig_tu_het -->
+<!--         )) -->
+<!--     ) %>% -->
+<!--     dplyr::filter(sig_any) -->
+<!-- mat <- tbl %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het, tu_het -->
+<!--     ) %>% -->
+<!--     column_to_rownames("Pathway") %>% -->
+<!--     as.matrix() -->
+<!-- row_anno <-  rowAnnotation( -->
+<!--     fai_wt = tbl %>% -->
+<!--         with(structure(sig_fai_wt, names = Pathway)), -->
+<!--     eofad_wt = tbl %>% -->
+<!--         with(structure(sig_eofad_wt, names = Pathway)), -->
+<!--     eofad_fai = tbl %>% -->
+<!--         with(structure(sig_eofad_fai, names = Pathway)), -->
+<!--     pk_tu = tbl %>% -->
+<!--         with(structure(sig_pk_tu, names = Pathway)), -->
+<!--     pk_het = tbl %>% -->
+<!--         with(structure(sig_pk_het, names = Pathway)), -->
+<!--     tu_het = tbl %>% -->
+<!--         with(structure(sig_tu_het, names = Pathway)), -->
+<!--     col = list( -->
+<!--         fai_wt = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         eofad_wt = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         eofad_fai = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         pk_tu = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         pk_het = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         tu_het = c("TRUE" = "pink", "FALSE" = "grey50") -->
+<!--     ), -->
+<!--     show_legend = c(TRUE, rep(FALSE, 5)), -->
+<!--     annotation_legend_param = list( -->
+<!--         title = "Significant" -->
+<!--     ) -->
+<!-- ) -->
+<!-- Heatmap( -->
+<!--     mat, -->
+<!--     show_row_dend = FALSE, -->
+<!--     cluster_columns = FALSE, -->
+<!--     show_column_dend = FALSE, -->
+<!--     row_names_gp = gpar(fontsize = 10), -->
+<!--     row_names_side = "left", -->
+<!--     left_annotation = row_anno, -->
+<!--     col = colorRampPalette(c("darkred", "lightyellow", "darkblue"))(100), -->
+<!--     heatmap_legend_param = list( -->
+<!--         title = "NES" -->
+<!--     ) -->
+<!-- ) -->
+<!-- ``` -->
+
+### KEGG
+
+```{r gsea_d_kg}
+set.seed(2409)
+gsea$d$kg <- lapply(ranks_d, \(x){
+    fgseaMultilevel(kg_by_id, x) %>%
+        as_tibble() %>%
+        dplyr::rename(FDR = padj, Pathway = pathway) %>%
+        dplyr::arrange(pval) %>%
+        mutate(
+            Edge = vapply(leadingEdge, length, numeric(1)),
+            Direction = case_when(
+                sign(ES) == 1 ~ "Up",
+                sign(ES) == -1 ~ "Down",
+                sign(ES) == 0 ~ "None"
+            ),
+            bonf.padj = p.adjust(pval, "bonferroni"),
+            Sig = FDR < 0.05,
+        )
+})
+```
+
+#### EOfAD vs WT
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_kg_eofad_wt}
+id <- "gsea_d_kg_eofad_wt"
+tbl <- gsea$d$kg$eofad_wt %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_kg_d_eofad_wt}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$kg$eofad_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_kg_d_eofad_wt}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$kg$eofad_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### fAI vs WT
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_kg_fai_wt}
+id <- "gsea_d_kg_fai_wt"
+tbl <- gsea$d$kg$fai_wt %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_kg_d_fai_wt}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$kg$fai_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_kg_d_fai_wt}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$kg$fai_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### EOfAD vs fAI
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_kg_eofad_fai}
+id <- "gsea_d_kg_eofad_fai"
+tbl <- gsea$d$kg$eofad_fai %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_kg_d_eofad_fai}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$kg$eofad_fai
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_kg_d_eofad_fai}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$kg$eofad_fai
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### PK vs Tu
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_kg_pk_tu}
+id <- "gsea_d_kg_pk_tu"
+tbl <- gsea$d$kg$pk_tu %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_kg_d_pk_tu}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$kg$pk_tu
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_kg_d_pk_tu}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$kg$pk_tu
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### PK vs het
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_kg_pk_het}
+id <- "gsea_d_kg_pk_het"
+tbl <- gsea$d$kg$pk_het %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_kg_d_pk_het}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$kg$pk_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_kg_d_pk_het}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$kg$pk_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### Tu vs het
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_kg_tu_het}
+id <- "gsea_d_kg_tu_het"
+tbl <- gsea$d$kg$tu_het %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_kg_d_tu_het}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$kg$tu_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_kg_d_tu_het}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$kg$tu_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+<!-- #### Comparison -->
+
+<!-- ```{r heat_kg_d} -->
+<!-- tbl <- gsea$d$kg$eofad_wt %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt = NES, sig_eofad_wt = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$kg$fai_wt) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$kg$eofad_fai) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$kg$pk_tu) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$kg$pk_het) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu, sig_pk_het = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$kg$tu_het) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het, tu_het = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu, sig_pk_het, sig_tu_het = Sig -->
+<!--     ) %>% -->
+<!--     mutate( -->
+<!--         Pathway = str_trunc(str_replace_all(Pathway, "_", " "), 30), -->
+<!--         sig_any = as.logical(pmax( -->
+<!--             sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--             sig_pk_tu, sig_pk_het, sig_tu_het -->
+<!--         )) -->
+<!--     ) %>% -->
+<!--     dplyr::filter(sig_any) -->
+<!-- mat <- tbl %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het, tu_het -->
+<!--     ) %>% -->
+<!--     column_to_rownames("Pathway") %>% -->
+<!--     as.matrix() -->
+<!-- row_anno <-  rowAnnotation( -->
+<!--     fai_wt = tbl %>% -->
+<!--         with(structure(sig_fai_wt, names = Pathway)), -->
+<!--     eofad_wt = tbl %>% -->
+<!--         with(structure(sig_eofad_wt, names = Pathway)), -->
+<!--     eofad_fai = tbl %>% -->
+<!--         with(structure(sig_eofad_fai, names = Pathway)), -->
+<!--     pk_tu = tbl %>% -->
+<!--         with(structure(sig_pk_tu, names = Pathway)), -->
+<!--     pk_het = tbl %>% -->
+<!--         with(structure(sig_pk_het, names = Pathway)), -->
+<!--     tu_het = tbl %>% -->
+<!--         with(structure(sig_tu_het, names = Pathway)), -->
+<!--     col = list( -->
+<!--         fai_wt = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         eofad_wt = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         eofad_fai = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         pk_tu = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         pk_het = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         tu_het = c("TRUE" = "pink", "FALSE" = "grey50") -->
+<!--     ), -->
+<!--     show_legend = c(TRUE, rep(FALSE, 5)), -->
+<!--     annotation_legend_param = list( -->
+<!--         title = "Significant" -->
+<!--     ) -->
+<!-- ) -->
+<!-- Heatmap( -->
+<!--     mat, -->
+<!--     show_row_dend = FALSE, -->
+<!--     cluster_columns = FALSE, -->
+<!--     show_column_dend = FALSE, -->
+<!--     row_names_gp = gpar(fontsize = 10), -->
+<!--     row_names_side = "left", -->
+<!--     left_annotation = row_anno, -->
+<!--     col = colorRampPalette(c("darkred", "lightyellow", "darkblue"))(100), -->
+<!--     heatmap_legend_param = list( -->
+<!--         title = "NES" -->
+<!--     ) -->
+<!-- ) -->
+<!-- ``` -->
+
+### Wikipathways
+
+```{r gsea_d_wk}
+set.seed(2409)
+gsea$d$wk <- lapply(ranks_d, \(x){
+    fgseaMultilevel(wk_by_id, x) %>%
+        as_tibble() %>%
+        dplyr::rename(FDR = padj, Pathway = pathway) %>%
+        dplyr::arrange(pval) %>%
+        mutate(
+            Edge = vapply(leadingEdge, length, numeric(1)),
+            Direction = case_when(
+                sign(ES) == 1 ~ "Up",
+                sign(ES) == -1 ~ "Down",
+                sign(ES) == 0 ~ "None"
+            ),
+            bonf.padj = p.adjust(pval, "bonferroni"),
+            Sig = FDR < 0.05,
+        )
+})
+```
+
+#### EOfAD vs WT
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_wk_eofad_wt}
+id <- "gsea_d_wk_eofad_wt"
+tbl <- gsea$d$wk$eofad_wt %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_wk_d_eofad_wt}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$wk$eofad_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_wk_d_eofad_wt}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$wk$eofad_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### fAI vs WT
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_wk_fai_wt}
+id <- "gsea_d_wk_fai_wt"
+tbl <- gsea$d$wk$fai_wt %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_wk_d_fai_wt}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$wk$fai_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_wk_d_fai_wt}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$wk$fai_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### EOfAD vs fAI
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_wk_eofad_fai}
+id <- "gsea_d_wk_eofad_fai"
+tbl <- gsea$d$wk$eofad_fai %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_wk_d_eofad_fai}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$wk$eofad_fai
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_wk_d_eofad_fai}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$wk$eofad_fai
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### PK vs Tu
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_wk_pk_tu}
+id <- "gsea_d_wk_pk_tu"
+tbl <- gsea$d$wk$pk_tu %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_wk_d_pk_tu}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$wk$pk_tu
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_wk_d_pk_tu}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$wk$pk_tu
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### PK vs het
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_wk_pk_het}
+id <- "gsea_d_wk_pk_het"
+tbl <- gsea$d$wk$pk_het %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_wk_d_pk_het}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$wk$pk_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_wk_d_pk_het}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$wk$pk_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### Tu vs het
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_wk_tu_het}
+id <- "gsea_d_wk_tu_het"
+tbl <- gsea$d$wk$tu_het %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_wk_d_tu_het}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$wk$tu_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_wk_d_tu_het}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$wk$tu_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+<!-- #### Comparison -->
+
+<!-- ```{r heat_wk_d} -->
+<!-- tbl <- gsea$d$wk$eofad_wt %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt = NES, sig_eofad_wt = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$wk$fai_wt) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$wk$eofad_fai) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$wk$pk_tu) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$wk$pk_het) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu, sig_pk_het = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$wk$tu_het) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het, tu_het = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu, sig_pk_het, sig_tu_het = Sig -->
+<!--     ) %>% -->
+<!--     mutate( -->
+<!--         Pathway = str_trunc(str_replace_all(Pathway, "_", " "), 30), -->
+<!--         sig_any = as.logical(pmax( -->
+<!--             sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--             sig_pk_tu, sig_pk_het, sig_tu_het -->
+<!--         )) -->
+<!--     ) %>% -->
+<!--     dplyr::filter(sig_any) -->
+<!-- mat <- tbl %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het, tu_het -->
+<!--     ) %>% -->
+<!--     column_to_rownames("Pathway") %>% -->
+<!--     as.matrix() -->
+<!-- row_anno <-  rowAnnotation( -->
+<!--     fai_wt = tbl %>% -->
+<!--         with(structure(sig_fai_wt, names = Pathway)), -->
+<!--     eofad_wt = tbl %>% -->
+<!--         with(structure(sig_eofad_wt, names = Pathway)), -->
+<!--     eofad_fai = tbl %>% -->
+<!--         with(structure(sig_eofad_fai, names = Pathway)), -->
+<!--     pk_tu = tbl %>% -->
+<!--         with(structure(sig_pk_tu, names = Pathway)), -->
+<!--     pk_het = tbl %>% -->
+<!--         with(structure(sig_pk_het, names = Pathway)), -->
+<!--     tu_het = tbl %>% -->
+<!--         with(structure(sig_tu_het, names = Pathway)), -->
+<!--     col = list( -->
+<!--         fai_wt = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         eofad_wt = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         eofad_fai = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         pk_tu = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         pk_het = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         tu_het = c("TRUE" = "pink", "FALSE" = "grey50") -->
+<!--     ), -->
+<!--     show_legend = c(TRUE, rep(FALSE, 5)), -->
+<!--     annotation_legend_param = list( -->
+<!--         title = "Significant" -->
+<!--     ) -->
+<!-- ) -->
+<!-- Heatmap( -->
+<!--     mat, -->
+<!--     show_row_dend = FALSE, -->
+<!--     cluster_columns = FALSE, -->
+<!--     show_column_dend = FALSE, -->
+<!--     row_names_gp = gpar(fontsize = 10), -->
+<!--     row_names_side = "left", -->
+<!--     left_annotation = row_anno, -->
+<!--     col = colorRampPalette(c("darkred", "lightyellow", "darkblue"))(100), -->
+<!--     heatmap_legend_param = list( -->
+<!--         title = "NES" -->
+<!--     ) -->
+<!-- ) -->
+<!-- ``` -->
+
+### Reactome
+
+```{r gsea_d_rtm}
+set.seed(2409)
+gsea$d$rtm <- lapply(ranks_d, \(x){
+    fgseaMultilevel(rtm_by_id, x) %>%
+        as_tibble() %>%
+        dplyr::rename(FDR = padj, Pathway = pathway) %>%
+        dplyr::arrange(pval) %>%
+        mutate(
+            Edge = vapply(leadingEdge, length, numeric(1)),
+            Direction = case_when(
+                sign(ES) == 1 ~ "Up",
+                sign(ES) == -1 ~ "Down",
+                sign(ES) == 0 ~ "None"
+            ),
+            bonf.padj = p.adjust(pval, "bonferroni"),
+            Sig = FDR < 0.05,
+        )
+})
+```
+
+#### EOfAD vs WT
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_rtm_eofad_wt}
+id <- "gsea_d_rtm_eofad_wt"
+tbl <- gsea$d$rtm$eofad_wt %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_rtm_d_eofad_wt}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$rtm$eofad_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_rtm_d_eofad_wt}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$rtm$eofad_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### fAI vs WT
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_rtm_fai_wt}
+id <- "gsea_d_rtm_fai_wt"
+tbl <- gsea$d$rtm$fai_wt %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_rtm_d_fai_wt}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$rtm$fai_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_rtm_d_fai_wt}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$rtm$fai_wt
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### EOfAD vs fAI
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_rtm_eofad_fai}
+id <- "gsea_d_rtm_eofad_fai"
+tbl <- gsea$d$rtm$eofad_fai %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_rtm_d_eofad_fai}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$rtm$eofad_fai
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_rtm_d_eofad_fai}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$rtm$eofad_fai
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### PK vs Tu
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_rtm_pk_tu}
+id <- "gsea_d_rtm_pk_tu"
+tbl <- gsea$d$rtm$pk_tu %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_rtm_d_pk_tu}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$rtm$pk_tu
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_rtm_d_pk_tu}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$rtm$pk_tu
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### PK vs het
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_rtm_pk_het}
+id <- "gsea_d_rtm_pk_het"
+tbl <- gsea$d$rtm$pk_het %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_rtm_d_pk_het}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$rtm$pk_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_rtm_d_pk_het}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$rtm$pk_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+#### Tu vs het
+
+::: {.panel-tabset}
+
+##### Results table
+
+```{r gsea_d_rtm_tu_het}
+id <- "gsea_d_rtm_tu_het"
+tbl <- gsea$d$rtm$tu_het %>%
+    dplyr::select(Pathway, pval, FDR, Edge, Direction, Sig, leadingEdge) %>%
+    mutate(
+        Pathway = str_replace_all(Pathway, "_", " "),
+        Sig = str_to_title(as.character(Sig)),
+        leadingEdge = lapply(leadingEdge, \(x){
+            sort(genes$gene_name[genes$gene_id %in% x])
+        })
+    )
+
+htmltools::browsable(
+    tagList(
+        tags$caption(glue(
+            "{sum(as.logical(tbl$Sig))} of {nrow(tbl)} total pathways ",
+            "were classified as significantly enriched. ",
+            "This table is interactive where columns can be resized, ",
+            "and leading edge genes can be seen by hovering over cells in the 'Edge' column."
+        )),
+        lb_reactable(
+            tbl,
+            elementId = id,
+            defaultColDef = colDef(
+                align = "left",
+                minWidth = 80
+            ),
+            columns = list(
+                pval = colDef(cell = react_format("e")),
+                FDR = colDef(cell = react_format("e")),
+                Pathway = colDef(minWidth = 160),
+                Edge = colDef(
+                    cell = \(val, ind, col_name){
+                        tooltip(
+                            val,
+                            tbl$leadingEdge[ind]
+                        )
+                    }
+                ),
+                leadingEdge = colDef(show = FALSE)
+            )
+        ),
+        tags$button(
+            tagList(fontawesome::fa("download"), "Download as CSV"),
+            onclick = glue("Reactable.downloadDataCSV('{id}', '{id}.csv')")
+        )
+    )
+)
+```
+
+##### Network vis
+
+```{r node_rtm_d_tu_het}
+#| fig-cap: "Network analysis of the significantly enriched pathways. Coloured nodes represent pathways, black nodes represent leading edge genes. The relative size of pathway nodes is determined by -log~10~(*p*). Pathways that cluster close together share leading edge genes. Pathway nodes are labelled by their respective name, and in the case of directional GSEA, upregulated pathways are colour blue and downregulated pathways are coloured red."
+set.seed(2409)
+x <- gsea$d$rtm$tu_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_node_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+```{r edge_rtm_d_tu_het}
+#| fig-cap: "An alternative representation for network analysis of significantly enriched pathways. Here genes are omitted, but the alpha level (opacity) of edges represents the number of shared genes between the gene sets. Edges that appear bolder relative to other edges indicates that these pathways share a larger number of genes."
+set.seed(2409)
+x <- gsea$d$rtm$tu_het
+if (between(sum(x$Sig), 1, 50)) {
+    gsea_edge_network(x, TRUE)
+} else {
+    pander(glue(
+        "**No plot generated because number of significant pathways is ",
+        "{ifelse(
+            sum(x$Sig) < 1,
+            'less than 1.',
+            'greater than 50.'
+        )}**"
+    ))
+}
+```
+
+:::
+
+<!-- #### Comparison -->
+
+<!-- ```{r heat_rtm_d} -->
+<!-- tbl <- gsea$d$rtm$eofad_wt %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt = NES, sig_eofad_wt = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$rtm$fai_wt) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$rtm$eofad_fai) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$rtm$pk_tu) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$rtm$pk_het) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu, sig_pk_het = Sig -->
+<!--     ) %>% -->
+<!--     left_join(gsea$d$rtm$tu_het) %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het, tu_het = NES, -->
+<!--         sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--         sig_pk_tu, sig_pk_het, sig_tu_het = Sig -->
+<!--     ) %>% -->
+<!--     mutate( -->
+<!--         Pathway = str_trunc(str_replace_all(Pathway, "_", " "), 60), -->
+<!--         sig_any = as.logical(pmax( -->
+<!--             sig_eofad_wt, sig_fai_wt, sig_eofad_fai, -->
+<!--             sig_pk_tu, sig_pk_het, sig_tu_het -->
+<!--         )) -->
+<!--     ) %>% -->
+<!--     dplyr::filter(sig_any) -->
+<!-- mat <- tbl %>% -->
+<!--     dplyr::select( -->
+<!--         Pathway, -->
+<!--         eofad_wt, fai_wt, eofad_fai, -->
+<!--         pk_tu, pk_het, tu_het -->
+<!--     ) %>% -->
+<!--     column_to_rownames("Pathway") %>% -->
+<!--     as.matrix() -->
+<!-- row_anno <-  rowAnnotation( -->
+<!--     fai_wt = tbl %>% -->
+<!--         with(structure(sig_fai_wt, names = Pathway)), -->
+<!--     eofad_wt = tbl %>% -->
+<!--         with(structure(sig_eofad_wt, names = Pathway)), -->
+<!--     eofad_fai = tbl %>% -->
+<!--         with(structure(sig_eofad_fai, names = Pathway)), -->
+<!--     pk_tu = tbl %>% -->
+<!--         with(structure(sig_pk_tu, names = Pathway)), -->
+<!--     pk_het = tbl %>% -->
+<!--         with(structure(sig_pk_het, names = Pathway)), -->
+<!--     tu_het = tbl %>% -->
+<!--         with(structure(sig_tu_het, names = Pathway)), -->
+<!--     col = list( -->
+<!--         fai_wt = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         eofad_wt = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         eofad_fai = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         pk_tu = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         pk_het = c("TRUE" = "pink", "FALSE" = "grey50"), -->
+<!--         tu_het = c("TRUE" = "pink", "FALSE" = "grey50") -->
+<!--     ), -->
+<!--     show_legend = c(TRUE, rep(FALSE, 5)), -->
+<!--     annotation_legend_param = list( -->
+<!--         title = "Significant" -->
+<!--     ) -->
+<!-- ) -->
+<!-- Heatmap( -->
+<!--     mat, -->
+<!--     show_row_dend = FALSE, -->
+<!--     cluster_columns = FALSE, -->
+<!--     show_column_dend = FALSE, -->
+<!--     row_names_gp = gpar(fontsize = 10), -->
+<!--     row_names_side = "left", -->
+<!--     left_annotation = row_anno, -->
+<!--     col = colorRampPalette(c("darkred", "lightyellow", "darkblue"))(100), -->
+<!--     heatmap_legend_param = list( -->
+<!--         title = "NES" -->
+<!--     ) -->
+<!-- ) -->
+<!-- ``` -->
+
+# Data export
+
+```{r data_export}
+saveRDS(gsea, here("Rdata/gsea_dar.Rds"))
+```
+
+# Session information
+
+```{r session_info}
+sessionInfo() %>%
+    pander()
+```

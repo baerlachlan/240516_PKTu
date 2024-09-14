@@ -509,7 +509,16 @@ load_fc_summary <- function(file){
 ```
 
 ```{r fc}
-fc <- load_fc_summary(here("smk-de/results/count/all.featureCounts.summary"))
+fc_str <- load_fc_summary(here("smk-de/results/count/stranded/all.featureCounts.summary")) %>%
+    mutate(strandedness = "Stranded")
+fc_uns <- load_fc_summary(here("smk-de/results/count/unstranded/all.featureCounts.summary")) %>%
+    mutate(strandedness = "Unstranded")
+fc_rev <- load_fc_summary(here("smk-de/results/count/reverse/all.featureCounts.summary")) %>%
+    mutate(strandedness = "Reverse Stranded")
+fc_all <- rbind(fc_str, fc_uns, fc_rev) %>%
+    dplyr::mutate(strandedness = factor(
+        strandedness, levels = c("Stranded", "Unstranded", "Reverse Stranded")
+    )) 
 ```
 
 Description of `featureCounts` unassigned read types:
@@ -529,11 +538,12 @@ Description of `featureCounts` unassigned read types:
 - Unassigned Ambiguity: alignments that overlap two or more features (feature-level summarization) or meta-features (meta-feature-level summarization).
 
 ```{r counts_summary}
-fc %>%
+fc_all %>%
     dplyr::filter(reads != 0) %>%
     ggplot(aes(x = sample, y = reads, fill = Status)) +
     geom_bar(position = "stack", stat = "identity") +
     coord_flip() +
+    facet_wrap(~strandedness) +
     scale_fill_manual(values = brewer.pal(8, "Set2")) +
     labs(
         title = "Gene counts summary",
@@ -543,10 +553,44 @@ fc %>%
     ) +
     scale_y_continuous(
         labels = scales::comma,
-        breaks = seq(0, 5e8, 2.5e7),
-        expand = expansion(c(0, 0.01))
+        breaks = seq(0, 1.5e8, 2.5e7),
+        expand = expansion(c(0, 0.2))
     ) +
     theme(
         axis.text.x = element_text(angle = -40, , vjust = 1, hjust = 0)
     )
+```
+
+Both the stranded and unstranded outputs appear quite similar, let's take a closer look.
+
+```{r counts_summary_2}
+fc_all %>%
+    dplyr::filter(
+        reads != 0,
+        strandedness != "Reverse Stranded"
+    ) %>%
+    ggplot(aes(x = strandedness, y = reads, fill = Status)) +
+    geom_violin() +
+    geom_boxplot(width=0.2, show.legend = FALSE) +
+    facet_wrap(~Status, scales = "free_y", ncol = 2) +
+    scale_fill_manual(values = brewer.pal(8, "Set2")) +
+    scale_y_continuous(labels = scales::scientific) +
+    labs(
+        x = "Strandedness",
+        y = "Total reads",
+        fill = "Type"
+    )
+```
+
+The stranded approach has less unassigned reads due to ambiguity.
+However, it also has more unassigned reads due to no features.
+This makes sense because strandedness helps to resolve ambiguity, determining their correct assignment.
+
+The stranded counting appears to be the best choice in these libraries.
+
+# Session information
+
+```{r session_info}
+sessionInfo() %>%
+    pander()
 ```

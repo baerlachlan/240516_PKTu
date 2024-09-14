@@ -1,0 +1,982 @@
+---
+title: "PKTu"
+subtitle: "Differential Expression Analysis (CQN)"
+author: "Lachlan Baer"
+date-modified: today
+date-format: "DD MMMM, YYYY"
+modified-title: "LAST MODIFIED"
+code-fold: true
+fig-width: 8
+fig-height: 6
+fig-align: center
+editor_options:
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE,
+    message = FALSE,
+    warning = FALSE,
+    error = FALSE,
+    fig.align = "center"
+)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+```{r pkgs}
+suppressPackageStartupMessages({
+    ## Common packages
+    library(tidyverse)
+    library(magrittr)
+    library(here)
+    library(kableExtra)
+    library(RColorBrewer)
+    library(ggpubr)
+    library(scales)
+    library(AnnotationHub)
+    library(ggrepel)
+    library(ggtext)
+    library(glue)
+    library(pander)
+    library(DT)
+    library(reactable)
+    # library(reactablefmtr)
+    library(htmltools)
+    ## Document-specific packages
+    library(edgeR)
+    library(cqn)
+    library(pheatmap)
+    library(corrplot)
+})
+```
+
+```{r opts}
+theme_set(theme_bw())
+theme_update(
+    axis.title.x = element_markdown(),
+    axis.title.y = element_markdown(),
+    strip.background = element_blank(),
+    strip.text = element_textbox(
+        size = 10,
+        color = "black", fill = "white", box.color = "black",
+        halign = 0.5, linetype = 1, width = unit(1, "npc"),
+        padding = margin(3, 0, 1, 0), margin = margin(0, 0, 0, 0)
+    )
+)
+pal1 <- brewer.pal(12, "Set3")
+pal2 <- brewer.pal(8, "Set2")
+```
+
+```{r lb_complex_dt}
+lb_complex_dt <- function(tbl, cap, rownames = FALSE){
+    datatable(
+        tbl,
+        caption = htmltools::tags$caption(
+            cap,
+            style = "text-align: left;"
+        ),
+        options = list(
+            dom = "tflipr",  # Available options: tflipr
+            columnDefs = list(list(className = 'dt-left', targets = "_all")),  # Align all columns left
+            pageLength = 10,  # Show all results
+            scrollCollapse = TRUE,  # Removes whitespace when table is small
+            scrollY = "100%",  # Sets max height of table before scrollbar is added
+            scrollX = TRUE,  # Enable horizontal scrolling when too wide
+            sScrollX = "100%",  # Stops last column title being cut off
+            initComplete = JS(  # Set font
+                "function(settings, json) {",
+                "$('body').css({'font-family': 'Calibri'});",
+                "}"
+            )
+        ),
+        rownames = rownames,
+        height = "100%",  # Seems to work in tandem with scrollCollapse
+        width = "100%",  # Fills width when viewed in RStudio viewer
+        class = "stripe hover row-border order-column compact nowrap"
+    )
+}
+```
+
+```{r lb_reactable}
+lb_reactable <- function(
+        tbl, highlight = TRUE, striped = TRUE, compact = TRUE,
+        wrap = FALSE, resizable = TRUE, searchable = TRUE,
+        style = list(fontFamily = "Calibri, sans-serif"), ...
+){
+    reactable(
+        tbl,
+        highlight = highlight, striped = striped, compact = compact,
+        wrap = wrap, resizable = TRUE, searchable = TRUE,
+        style = style, ...
+    )
+}
+tooltip <- function(value, tooltip) {
+    tags$abbr(
+        style = "text-decoration: underline; text-decoration-style: solid; cursor: help",
+        title = tooltip,
+        value
+    )
+}
+react_format <- function(format, digits = 2){
+    function(val, ind, col_name){
+        formatC(val, digits = digits, format = format)
+    }
+}
+```
+
+# Metadata
+
+```{r meta}
+meta <- read_csv(here("misc/metadata.csv")) %>%
+    mutate(
+        geno_psen1 = fct_relevel(geno_psen1, c("wt", "eofad", "fai")),
+        geno_chr14 = fct_relevel(geno_chr14, c("tu", "pk", "het")),
+        geno_joint = fct_relevel(geno_joint, unique(geno_joint))
+    )
+meta %>%
+    kable(
+        align = "l",
+        caption = "Sample metadata"
+    ) %>%
+    kable_styling(
+        bootstrap_options = c("striped", "hover", "condensed", "responsive")
+    )
+```
+
+```{r pal_group}
+pal_group <- c(
+    "eofad_tu" = pal1[1], "eofad_pk" = pal1[2], "eofad_het" = pal1[3],
+    "fai_tu" = pal1[4], "fai_pk" = pal1[5], "fai_het" = pal1[6],
+    "wt_tu" = pal1[7], "wt_pk" = pal1[8], "wt_het" = pal1[10],
+    "eofad" = pal2[1], "fai" = pal2[2], "wt" = pal2[3],
+    "pk" = pal2[4], "tu" = pal2[5], "het" = pal2[6]
+)
+```
+
+# Annotations
+
+```{r ensParams}
+ens_species <- "Danio rerio"
+ens_release <- "111"
+ens_assembly <- "GRCz11"
+```
+
+```{r ensDb}
+ah <- AnnotationHub() %>%
+    subset(species == ens_species) %>%
+    subset(rdataclass == "EnsDb")
+ahId <- ah$ah_id[str_detect(ah$title, ens_release)]
+ensDb <- ah[[ahId]]
+```
+
+```{r primary_chrs}
+primary_chrs <- c(as.character(1:25), "MT")
+```
+
+```{r transcripts}
+transcripts <- transcripts(ensDb)
+tx_len <- exonsBy(ensDb, "tx") %>%
+    width() %>%
+    lapply(sum) %>%
+    unlist(use.names = TRUE) %>%
+    enframe(name = "tx_id", value = "length")
+mcols(transcripts) <- mcols(transcripts)[
+    c("tx_id", "gene_id", "gc_content")
+] %>%
+    as.data.frame() %>%
+    left_join(tx_len)
+```
+
+```{r gene_gclen}
+gene_gclen <- transcripts %>%
+    mcols() %>%
+    as_tibble() %>%
+    group_by(gene_id) %>%
+    summarise(
+        gc_content = sum(gc_content*length) / sum(length),
+        length = ceiling(median(length))
+    )
+```
+
+```{r genes}
+genes <- genes(ensDb)
+mcols(genes) <- mcols(genes)[
+    c("gene_id", "gene_name", "gene_biotype", "entrezid")
+] %>%
+    as.data.frame() %>%
+    left_join(gene_gclen)
+```
+
+An `EnsDb` object was obtained for Ensembl release `r ens_release` with the `AnnotationHub` package.
+This contained the information required to set up gene and transcript annotations.
+Gene-level estimates of GC content and length were also generated which are required for assessing potential biases in downstream analysis.
+
+# Load data
+
+```{r load_data}
+dge_list <- readRDS(here("Rdata/dge_list.Rds"))
+```
+
+# CQN
+
+Try CQN due to the concerns with gene GC content and length, as highlighted by PCA and bias check plots.
+
+```{r cqn}
+cqn <- cqn(
+    counts = dge_list$counts,
+    x = dge_list$genes$gc_content,
+    lengths = dge_list$genes$length,
+    # lengths = rep(1000, times = nrow(dge_list)),
+    # lengthMethod = "fixed",
+    sizeFactors = dge_list$samples$lib.size
+)
+```
+
+```{r cqnplot}
+#| fig-cap: "Plots of the estimated systematic effect, which are removed by conditional quantile normalisation (CQN)."
+par(mfrow = c(1, 2))
+cqnplot(cqn, n = 1, xlab = "GC Content", col = pal_group)
+cqnplot(cqn, n = 2, xlab = "Length", col = pal_group)
+legend(
+    "bottomright",
+    legend = levels(meta$geno_joint),
+    col = pal_group,
+    lty = 1
+)
+par(mfrow = c(1, 1))
+```
+
+```{r}
+cpm <- cqn %>%
+    with(y + offset)
+```
+
+```{r dge_cqn}
+dge_list$offset <- cqn$glm.offset
+```
+
+# PCA
+
+```{r pca}
+pca <- cpm %>%
+    t() %>%
+    prcomp()
+pca_vars <- percent_format(0.1)(summary(pca)$importance["Proportion of Variance",])
+```
+
+::: {.tabset-panel}
+
+## Joint genotype
+
+```{r pca_plot_joint}
+#| fig-cap: "*Principal Component Analysis of gene-level counts*"
+pca$x %>%
+    as.data.frame() %>%
+    rownames_to_column("sample") %>%
+    left_join(dge_list$samples) %>%
+    as_tibble() %>%
+    ggplot(aes(PC1, PC2, colour = geno_joint, fill = geno_joint, label = sample)) +
+    geom_point(size = 3) +
+    geom_text_repel(show.legend = FALSE) +
+    guides(fill = "none") +
+    labs(
+        title = "Principal component analysis",
+        x = paste0("PC1 (", pca_vars[["PC1"]], ")"),
+        y = paste0("PC2 (", pca_vars[["PC2"]], ")"),
+        colour = "Joint genotype"
+    ) +
+    scale_colour_manual(values = pal_group)
+```
+
+## psen1 genotype
+
+```{r pca_plot_psen1}
+#| fig-cap: "*Principal Component Analysis of gene-level counts*"
+pca$x %>%
+    as.data.frame() %>%
+    rownames_to_column("sample") %>%
+    left_join(dge_list$samples) %>%
+    as_tibble() %>%
+    ggplot(aes(PC1, PC2, colour = geno_psen1, fill = geno_psen1, label = sample)) +
+    geom_point(size = 3) +
+    geom_text_repel(show.legend = FALSE) +
+    guides(fill = "none") +
+    labs(
+        title = "Principal component analysis",
+        x = paste0("PC1 (", pca_vars[["PC1"]], ")"),
+        y = paste0("PC2 (", pca_vars[["PC2"]], ")"),
+        colour = "Type"
+    ) +
+    scale_colour_manual(values = pal_group)
+```
+
+## Chr14 genotype
+
+```{r pca_plot_chr24}
+#| fig-cap: "*Principal Component Analysis of gene-level counts*"
+pca$x %>%
+    as.data.frame() %>%
+    rownames_to_column("sample") %>%
+    left_join(dge_list$samples) %>%
+    as_tibble() %>%
+    ggplot(aes(PC1, PC2, colour = geno_chr14, fill = geno_chr14, label = sample)) +
+    geom_point(size = 3) +
+    geom_text_repel(show.legend = FALSE) +
+    guides(fill = "none") +
+    labs(
+        title = "Principal component analysis",
+        x = paste0("PC1 (", pca_vars[["PC1"]], ")"),
+        y = paste0("PC2 (", pca_vars[["PC2"]], ")"),
+        colour = "Type"
+    ) +
+    scale_colour_manual(values = pal_group)
+```
+
+:::
+
+A Principal Component Analysis (PCA) was performed using the sample logCPM values.
+PC1 accounts for a substantial proportion of the variance (`r pca_vars[["PC1"]]`), but PC2 also contains a considerable amount (`r pca_vars[["PC2"]]`).
+
+## PC correlations
+
+```{r gclen_summary}
+gclen_summary <- dge_list$counts %>%
+    as.data.frame() %>%
+    rownames_to_column("gene_id") %>%
+    as_tibble() %>%
+    pivot_longer(
+        cols = colnames(dge_list),
+        names_to = "sample",
+        values_to = "counts"
+    ) %>%
+    dplyr::filter(
+        counts > 0
+    ) %>%
+    left_join(
+        gene_gclen
+    ) %>%
+    dplyr::select(
+        ends_with("id"), sample, counts, gc_content, length
+    ) %>%
+    split(f = .$sample) %>%
+    lapply(
+        function(x){
+            DataFrame(
+                gc = Rle(x$gc_content, x$counts),
+                logLen = Rle(log10(x$length), x$counts)
+            )
+        }
+    ) %>%
+    vapply(function(x){
+        c(mean(x$gc), sd(x$gc), mean(x$logLen), sd(x$logLen))
+    }, numeric(4)
+    ) %>%
+    t() %>%
+    set_colnames(
+        c("mn_gc", "sd_gc", "mn_logLen", "sd_logLen")
+    ) %>%
+    as.data.frame() %>%
+    rownames_to_column("sample") %>%
+    as_tibble()
+```
+
+```{r pca_cor}
+pca_cor <- pca$x %>%
+    as.data.frame() %>%
+    rownames_to_column("sample") %>%
+    left_join(gclen_summary) %>%
+    as_tibble() %>%
+    left_join(dge_list$samples) %>%
+    dplyr::select(
+        PC1, PC2, PC3,
+        mean_gc = mn_gc,
+        mean_length = mn_logLen
+    ) %>%
+    cor()
+```
+
+```{r corrplot}
+corrplot(
+    pca_cor,
+    type = "lower",
+    diag = FALSE,
+    addCoef.col = 1, addCoefasPercent = TRUE,
+    tl.col = "black"
+)
+```
+
+```{r pca_gc_len}
+#| fig-height: 16
+a <- pca$x %>%
+    as.data.frame() %>%
+    rownames_to_column("sample") %>%
+    left_join(gclen_summary) %>%
+    left_join(dge_list$samples) %>%
+    as_tibble() %>%
+    ggplot(aes(PC1, mn_logLen)) +
+    geom_point(aes(colour = geno_joint), size = 3) +
+    geom_text_repel(aes(label = sample), show.legend = FALSE) +
+    geom_smooth(method = "lm") +
+    labs(
+        x = paste0("PC1 (", percent(summary(pca)$importance["Proportion of Variance","PC1"]),")"),
+        y = "Mean log~10~(Length)",
+        colour = "Type"
+    ) +
+    scale_colour_manual(values = pal_group)
+b <- pca$x %>%
+    as.data.frame() %>%
+    rownames_to_column("sample") %>%
+    left_join(gclen_summary) %>%
+    left_join(dge_list$samples) %>%
+    as_tibble() %>%
+    ggplot(aes(PC1, mn_gc)) +
+    geom_point(aes(colour = geno_joint), size = 3) +
+    geom_text_repel(aes(label = sample), show.legend = FALSE) +
+    geom_smooth(method = "lm") +
+    # scale_y_continuous(labels = percent) +
+    labs(
+        x = paste0("PC1 (", percent(summary(pca)$importance["Proportion of Variance","PC1"]),")"),
+        y = "Mean GC",
+        colour = "Type"
+    ) +
+    scale_colour_manual(values = pal_group)
+ggarrange(
+    a, b, nrow = 2,
+    common.legend = TRUE, legend = "bottom"
+)
+```
+
+# Differential expression (CQN)
+
+## psen1 genotype
+
+### Design
+
+The design matrix was defined containing an intercept representing baseline expression in wildtype samples. 
+The remaining two columns represent the presence of either the EofAD or fAI mutant alleles.
+
+```{r design_psen1}
+design_psen1 <- model.matrix(~geno_psen1, data = dge_list$samples) %>%
+    set_colnames(str_remove(colnames(.), "geno_psen1"))
+```
+
+```{r design_plot_psen1}
+#| fig-cap: "*Visualisation of the design matrix*"
+pheatmap(
+    design_psen1[meta$sample,],
+    cluster_cols = FALSE,
+    cluster_rows = FALSE,
+    color = c("white", "grey50"),
+    annotation_row = dge_list$samples["geno_psen1"],
+    annotation_colors = list(group = pal_group),
+    angle_col = "315",
+    legend = FALSE
+)
+```
+
+### Model fitting
+
+```{r fit_psen1}
+fit_psen1 <- estimateDisp(dge_list, design_psen1) %>%
+    glmQLFit()
+tt_psen1 <- colnames(design_psen1)[2:3] %>%
+    sapply(function(x){
+        glmQLFTest(fit_psen1, coef = x) %>%
+            topTags(n = Inf) %>%
+            .[["table"]] %>%
+            as_tibble() %>%
+            arrange(PValue) %>%
+            dplyr::select(
+                gene_id, gene_name, logFC, logCPM, PValue, FDR, everything()
+            ) %>%
+            mutate(
+                bonfP = p.adjust(PValue, "bonf"),
+                DE = ifelse(FDR < 0.05, TRUE, FALSE),
+                DE_cat = case_when(
+                    logFC <= 0 & DE ~ "Downregulated",
+                    logFC >= 0 & DE ~ "Upregulated",
+                    !DE ~ "Non-siginificant"
+                ),
+                coef = x,
+                label = glue("<b style='color:{pal_group[coef]}'>{coef}</b>"),
+            )
+    }, simplify = FALSE)
+```
+
+### DEGs
+
+::: {.panel-tabset}
+
+#### EOfAD
+
+```{r tt_eofad}
+tt_psen1$eofad %>%
+    dplyr::filter(DE) %>%
+    dplyr::select(gene_id, gene_name, chr, logFC, logCPM, PValue, FDR) %>%
+    mutate(
+        logCPM = formatC(logCPM, digits = 2, format = "f"),
+        logFC = formatC(logFC, digits = 2, format = "f"),
+        PValue = formatC(PValue, digits = 2, format = "e"),
+        FDR = formatC(FDR, digits = 2, format = "e"),
+        # bonfP = formatC(bonfP, digits = 2, format = "e"),
+    ) %>%
+    lb_complex_dt(cap = glue("The {nrow(.)} differentially expressed genes"))
+```
+
+```{r de_cat_eofad}
+tt_psen1$eofad %>%
+    pull(DE_cat) %>%
+    table() %>%
+    pander()
+```
+
+#### fAI
+
+```{r tt_fai}
+tt_psen1$fai %>%
+    dplyr::filter(DE) %>%
+    dplyr::select(gene_id, gene_name, chr, logFC, logCPM, PValue, FDR) %>%
+    mutate(
+        logCPM = formatC(logCPM, digits = 2, format = "f"),
+        logFC = formatC(logFC, digits = 2, format = "f"),
+        PValue = formatC(PValue, digits = 2, format = "e"),
+        FDR = formatC(FDR, digits = 2, format = "e"),
+        # bonfP = formatC(bonfP, digits = 2, format = "e"),
+    ) %>%
+    lb_complex_dt(cap = glue("The {nrow(.)} differentially expressed genes"))
+```
+
+```{r de_cat_fai}
+tt_psen1$fai %>%
+    pull(DE_cat) %>%
+    table() %>%
+    pander()
+```
+
+:::
+
+```{r pal_de}
+pal_de <- c(`TRUE` = "darkred", `FALSE` = "grey50")
+pal_de_cat <- c("Upregulated" = "darkblue", "Downregulated" = "darkred", "Non-significant" = "grey50")
+```
+
+### CPM boxplots
+
+Boxplots of the top DE genes and also those that only just reached the significance threshold (FDR < 0.05) to make sure everything looks as expected.
+
+::: {.panel-tabset}
+
+#### EOfAD
+
+```{r cpm_eofad}
+goi_eofad <- tt_psen1$eofad %>%
+    dplyr::filter(DE) %>%
+    dplyr::arrange(PValue) %>%
+    with(gene_id) 
+cpm(dge_list, log = TRUE) %>%
+    .[goi_eofad,] %>%
+    as.data.frame() %>%
+    rownames_to_column("gene_id") %>%
+    pivot_longer(
+        !starts_with("gene_id"), names_to = "sample", values_to = "logCPM"
+    ) %>%
+    left_join(dge_list$samples[c("sample", "geno_psen1")]) %>%
+    left_join(dge_list$genes[c("gene_id", "gene_name")]) %>%
+    mutate(gene_name = factor(gene_name, levels = unique(gene_name))) %>%
+    dplyr::filter(geno_psen1 %in% c("wt", "eofad")) %>%
+    ggplot(aes(geno_psen1, logCPM, fill = geno_psen1)) +
+    geom_boxplot() +
+    facet_wrap(~gene_name, scales = "free_y", ncol = 3) +
+    scale_fill_manual(values = pal_group) +
+    labs(x = "Type") +
+    theme(legend.position = "none")
+```
+
+#### fAI
+
+```{r cpm_fmr1}
+goi_fai <- tt_psen1$fai %>%
+    dplyr::filter(DE) %>%
+    dplyr::arrange(PValue) %>%
+    with(gene_id) 
+cpm(dge_list, log = TRUE) %>%
+    .[goi_fai,] %>%
+    t() %>%
+    data.frame() %>%
+    set_rownames(goi_fai) %>%
+    rownames_to_column("gene_id") %>%
+    pivot_longer(
+        !starts_with("gene_id"), names_to = "sample", values_to = "logCPM"
+    ) %>%
+    left_join(dge_list$samples[c("sample", "geno_psen1")]) %>%
+    left_join(dge_list$genes[c("gene_id", "gene_name")]) %>%
+    mutate(gene_name = factor(gene_name, levels = unique(gene_name))) %>%
+    dplyr::filter(geno_psen1 %in% c("wt", "fai")) %>%
+    ggplot(aes(geno_psen1, logCPM, fill = geno_psen1)) +
+    geom_boxplot() +
+    facet_wrap(~gene_name, scales = "free_y", ncol = 3) +
+    scale_fill_manual(values = pal_group) +
+    labs(x = "Type") +
+    theme(legend.position = "none")
+```
+
+:::
+
+### Bias checks
+
+#### *p*-value distributions
+
+```{r pdist_psen1}
+tt_psen1 %>%
+    bind_rows() %>%
+    ggplot(aes(PValue)) +
+    geom_histogram(bins = 100, colour = "black", fill = "grey90") +
+    facet_wrap(~coef, nrow = 2) +
+    labs(
+        x = "*p*-value",
+        y = "Count"
+    )
+```
+
+#### Volcano plots
+
+```{r volcano_psen1}
+tt_psen1 %>%
+    bind_rows() %>%
+    arrange(DE) %>%
+    ggplot(aes(logFC, -log10(PValue), colour = DE_cat)) +
+    geom_point(alpha = 0.4) +
+    geom_text_repel(
+        aes(label = gene_name),
+        size = 3,
+        data = . %>% dplyr::filter(DE,)
+    ) +
+    facet_wrap(~coef, ncol = 1) +
+    scale_colour_manual(values = pal_de_cat) +
+    labs(y = "-log~10~(*p*)") +
+    theme(legend.position = "none")
+```
+
+#### MA plots
+
+```{r ma_psen1}
+tt_psen1 %>%
+    bind_rows() %>%
+    arrange(DE) %>%
+    ggplot(aes(logCPM, logFC)) +
+    geom_point(aes(colour = DE_cat), alpha = 0.4) +
+    geom_smooth(se = FALSE, colour = "black") +
+    facet_wrap(~coef, nrow = 2) +
+    scale_colour_manual(values = pal_de_cat) +
+    theme(legend.position = "none")
+```
+
+#### GC content
+
+```{r gc_bias_psen1}
+tt_psen1 %>%
+    bind_rows() %>%
+    arrange(DE) %>%
+    mutate(stat = -sign(logFC)*log10(PValue)) %>%
+    ggplot(aes(gc_content, stat)) +
+    geom_point(aes(colour = DE_cat), alpha = 0.4) +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~coef) +
+    geom_text_repel(
+        aes(label = gene_name, colour = DE_cat),
+        size = 3,
+        data = . %>% dplyr::filter(DE)
+    ) +
+    labs(
+        x = "Gene GC content (%)",
+        y = "Ranking statistic"
+    ) +
+    scale_colour_manual(values = pal_de_cat) +
+    theme(legend.position = "none")
+```
+
+#### Length
+
+```{r len_bias_psen1}
+tt_psen1 %>%
+    bind_rows() %>%
+    arrange(DE) %>%
+    mutate(stat = -sign(logFC)*log10(PValue)) %>%
+    ggplot(aes(length, stat)) +
+    geom_point(aes(colour = DE_cat), alpha = 0.4) +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~coef)  +
+    geom_text_repel(
+        aes(label = gene_name, colour = DE_cat),
+        size = 3,
+        data = . %>% dplyr::filter(DE)
+    ) +
+    labs(
+        x = "GC length",
+        y = "Ranking Statistic"
+    ) +
+    # coord_cartesian(ylim = c(-10, 10)) +
+    scale_x_log10(labels = comma) +
+    scale_colour_manual(values = pal_de_cat) +
+    theme(legend.position = "none")
+```
+
+## Chr14 genotype
+
+### Design
+
+The design matrix was defined containing an intercept representing baseline expression in tu samples.
+The remaining two columns represent the presence of either the EofAD or fAI mutant alleles.
+
+```{r design_chr14}
+design_chr14 <- model.matrix(~geno_chr14, data = dge_list$samples) %>%
+    set_colnames(str_remove(colnames(.), "geno_chr14"))
+```
+
+```{r design_plot_chr14}
+#| fig-cap: "*Visualisation of the design matrix*"
+pheatmap(
+    design_chr14[meta$sample,],
+    cluster_cols = FALSE,
+    cluster_rows = FALSE,
+    color = c("white", "grey50"),
+    annotation_row = dge_list$samples["geno_chr14"],
+    annotation_colors = list(group = pal_group),
+    angle_col = "315",
+    legend = FALSE
+)
+```
+
+### Model fitting
+
+```{r fit_chr14}
+fit_chr14 <- estimateDisp(dge_list, design_chr14) %>%
+    glmQLFit()
+tt_chr14 <- colnames(design_chr14)[2:3] %>%
+    sapply(function(x){
+        glmQLFTest(fit_chr14, coef = x) %>%
+            topTags(n = Inf) %>%
+            .[["table"]] %>%
+            as_tibble() %>%
+            arrange(PValue) %>%
+            dplyr::select(
+                gene_id, gene_name, logFC, logCPM, PValue, FDR, everything()
+            ) %>%
+            mutate(
+                bonfP = p.adjust(PValue, "bonf"),
+                DE = ifelse(FDR < 0.05, TRUE, FALSE),
+                DE_cat = case_when(
+                    logFC <= 0 & DE ~ "Downregulated",
+                    logFC >= 0 & DE ~ "Upregulated",
+                    !DE ~ "Non-siginificant"
+                ),
+                coef = x,
+                label = glue("<b style='color:{pal_group[coef]}'>{coef}</b>"),
+            )
+    }, simplify = FALSE)
+```
+
+### DEGs
+
+::: {.panel-tabset}
+
+#### PK
+
+```{r tt_pk}
+tt_chr14$pk %>%
+    dplyr::filter(DE) %>%
+    dplyr::select(gene_id, gene_name, chr, logFC, logCPM, PValue, FDR) %>%
+    mutate(
+        logCPM = formatC(logCPM, digits = 2, format = "f"),
+        logFC = formatC(logFC, digits = 2, format = "f"),
+        PValue = formatC(PValue, digits = 2, format = "e"),
+        FDR = formatC(FDR, digits = 2, format = "e"),
+        # bonfP = formatC(bonfP, digits = 2, format = "e"),
+    ) %>%
+    lb_complex_dt(cap = glue("The {nrow(.)} differentially expressed genes"))
+```
+
+```{r de_cat_pk}
+tt_chr14$pk %>%
+    pull(DE_cat) %>%
+    table() %>%
+    pander()
+```
+
+#### het
+
+```{r tt_het}
+tt_chr14$het %>%
+    dplyr::filter(DE) %>%
+    dplyr::select(gene_id, gene_name, chr, logFC, logCPM, PValue, FDR) %>%
+    mutate(
+        logCPM = formatC(logCPM, digits = 2, format = "f"),
+        logFC = formatC(logFC, digits = 2, format = "f"),
+        PValue = formatC(PValue, digits = 2, format = "e"),
+        FDR = formatC(FDR, digits = 2, format = "e"),
+        # bonfP = formatC(bonfP, digits = 2, format = "e"),
+    ) %>%
+    lb_complex_dt(cap = glue("The {nrow(.)} differentially expressed genes"))
+```
+
+```{r de_cat_het}
+tt_chr14$het %>%
+    pull(DE_cat) %>%
+    table() %>%
+    pander()
+```
+
+:::
+
+### CPM boxplots
+
+Boxplots of the top DE genes and also those that only just reached the significance threshold (FDR < 0.05) to make sure everything looks as expected.
+
+::: {.panel-tabset}
+
+#### PK
+
+```{r cpm_pk}
+goi_pk <- tt_chr14$pk %>%
+    dplyr::filter(DE) %>%
+    dplyr::arrange(PValue) %>%
+    with(gene_id) 
+cpm(dge_list, log = TRUE) %>%
+    .[goi_pk,] %>%
+    as.data.frame() %>%
+    rownames_to_column("gene_id") %>%
+    pivot_longer(
+        !starts_with("gene_id"), names_to = "sample", values_to = "logCPM"
+    ) %>%
+    left_join(dge_list$samples[c("sample", "geno_chr14")]) %>%
+    left_join(dge_list$genes[c("gene_id", "gene_name")]) %>%
+    mutate(gene_name = factor(gene_name, levels = unique(gene_name))) %>%
+    dplyr::filter(geno_chr14 %in% c("tu", "pk")) %>%
+    ggplot(aes(geno_chr14, logCPM, fill = geno_chr14)) +
+    geom_boxplot() +
+    facet_wrap(~gene_name, scales = "free_y", ncol = 3) +
+    scale_fill_manual(values = pal_group) +
+    labs(x = "Type") +
+    theme(legend.position = "none")
+```
+
+:::
+
+### Bias checks
+
+#### *p*-value distributions
+
+```{r pdist_chr14}
+tt_chr14 %>%
+    bind_rows() %>%
+    ggplot(aes(PValue)) +
+    geom_histogram(bins = 100, colour = "black", fill = "grey90") +
+    facet_wrap(~coef, nrow = 2) +
+    labs(
+        x = "*p*-value",
+        y = "Count"
+    )
+```
+
+#### Volcano plots
+
+```{r volcano_chr14}
+#| fig-height: 12
+tt_chr14 %>%
+    bind_rows() %>%
+    arrange(DE) %>%
+    ggplot(aes(logFC, -log10(PValue), colour = DE_cat)) +
+    geom_point(alpha = 0.4) +
+    geom_text_repel(
+        aes(label = gene_name),
+        size = 3,
+        data = . %>% dplyr::filter(DE,)
+    ) +
+    facet_wrap(~coef, ncol = 1) +
+    scale_colour_manual(values = pal_de_cat) +
+    labs(y = "-log~10~(*p*)") +
+    theme(legend.position = "none")
+```
+
+#### MA plots
+
+```{r ma_chr14}
+#| fig-height: 12
+tt_chr14 %>%
+    bind_rows() %>%
+    arrange(DE) %>%
+    ggplot(aes(logCPM, logFC)) +
+    geom_point(aes(colour = DE_cat), alpha = 0.4) +
+    geom_smooth(se = FALSE, colour = "black") +
+    facet_wrap(~coef, nrow = 2) +
+    scale_colour_manual(values = pal_de_cat) +
+    theme(legend.position = "none")
+```
+
+#### GC content
+
+```{r gc_bias_chr14}
+tt_chr14 %>%
+    bind_rows() %>%
+    arrange(DE) %>%
+    mutate(stat = -sign(logFC)*log10(PValue)) %>%
+    ggplot(aes(gc_content, stat)) +
+    geom_point(aes(colour = DE_cat), alpha = 0.4) +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~coef) +
+    geom_text_repel(
+        aes(label = gene_name, colour = DE_cat),
+        size = 3,
+        data = . %>% dplyr::filter(DE)
+    ) +
+    labs(
+        x = "Gene GC content (%)",
+        y = "Ranking statistic"
+    ) +
+    scale_colour_manual(values = pal_de_cat) +
+    theme(legend.position = "none")
+```
+
+#### Length
+
+```{r len_bias_chr14}
+tt_chr14 %>%
+    bind_rows() %>%
+    arrange(DE) %>%
+    mutate(stat = -sign(logFC)*log10(PValue)) %>%
+    ggplot(aes(length, stat)) +
+    geom_point(aes(colour = DE_cat), alpha = 0.4) +
+    geom_smooth(se = FALSE) +
+    facet_wrap(~coef)  +
+    geom_text_repel(
+        aes(label = gene_name, colour = DE_cat),
+        size = 3,
+        data = . %>% dplyr::filter(DE)
+    ) +
+    labs(
+        x = "GC length",
+        y = "Ranking Statistic"
+    ) +
+    # coord_cartesian(ylim = c(-10, 10)) +
+    scale_x_log10(labels = comma) +
+    scale_colour_manual(values = pal_de_cat) +
+    theme(legend.position = "none")
+```
+
+# Data export
+
+```{r data_export}
+saveRDS(dge_list, here("Rdata/dge_cqn.Rds"))
+saveRDS(tt_psen1, here("Rdata/tt_psen1_cqn.Rds"))
+saveRDS(tt_chr14, here("Rdata/tt_chr14_cqn.Rds"))
+```
+
+# Session information
+
+```{r session_info}
+sessionInfo() %>%
+    pander()
+```

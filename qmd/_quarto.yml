@@ -16,8 +16,12 @@ website:
         href: qc.qmd
       - text: Differential Expression
         href: de.qmd
-      - text: Differential Expression (CQN)
-        href: de_cqn.qmd
+      - text: GSEA
+        href: gsea.qmd
+      - text: GSEA (DAR-corrected)
+        href: gsea_dar.qmd
+      - text: DAR
+        href: dar.qmd
     tools:
       - icon: github
         href: https://github.com/baerlachlan
