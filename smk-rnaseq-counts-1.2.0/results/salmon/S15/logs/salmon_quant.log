@@ -1,0 +1,160 @@
+[2024-11-04 13:57:13.519] [jointLog] [info] setting maxHashResizeThreads to 8
+[2024-11-04 13:57:13.520] [jointLog] [info] Fragment incompatibility prior below threshold.  Incompatible fragments will be ignored.
+[2024-11-04 13:57:13.520] [jointLog] [info] Usage of --validateMappings implies use of minScoreFraction. Since not explicitly specified, it is being set to 0.65
+[2024-11-04 13:57:13.520] [jointLog] [info] Setting consensusSlack to selective-alignment default of 0.35.
+[2024-11-04 13:57:13.520] [jointLog] [info] parsing read library format
+[2024-11-04 13:57:13.520] [jointLog] [info] There is 1 library.
+[2024-11-04 13:57:13.520] [jointLog] [info] Loading pufferfish index
+[2024-11-04 13:57:13.521] [jointLog] [info] Loading dense pufferfish index.
+[2024-11-04 13:57:26.780] [jointLog] [info] done
+[2024-11-04 13:57:26.806] [jointLog] [info] Index contained 58,185 targets
+[2024-11-04 13:57:26.815] [jointLog] [info] Number of decoys : 993
+[2024-11-04 13:57:26.815] [jointLog] [info] First decoy index : 57,178 
+[2024-11-04 13:57:27.465] [jointLog] [info] Automatically detected most likely library type as ISF
+
+[2024-11-04 14:04:47.117] [jointLog] [info] Thread saw mini-batch with a maximum of 1.72% zero probability fragments
+[2024-11-04 14:04:47.181] [jointLog] [info] Thread saw mini-batch with a maximum of 1.74% zero probability fragments
+[2024-11-04 14:04:47.194] [jointLog] [info] Thread saw mini-batch with a maximum of 1.80% zero probability fragments
+[2024-11-04 14:04:47.212] [jointLog] [info] Thread saw mini-batch with a maximum of 1.68% zero probability fragments
+[2024-11-04 14:04:47.216] [jointLog] [info] Thread saw mini-batch with a maximum of 1.76% zero probability fragments
+[2024-11-04 14:04:47.225] [jointLog] [info] Thread saw mini-batch with a maximum of 1.68% zero probability fragments
+[2024-11-04 14:04:47.241] [jointLog] [info] Thread saw mini-batch with a maximum of 1.84% zero probability fragments
+[2024-11-04 14:04:47.267] [jointLog] [info] Thread saw mini-batch with a maximum of 1.92% zero probability fragments
+[2024-11-04 14:04:47.329] [fileLog] [info] 
+At end of round 0
+==================
+Observed 65973265 total fragments (65973265 in most recent round)
+
+[2024-11-04 14:04:47.329] [jointLog] [info] Computed 114,406 rich equivalence classes for further processing
+[2024-11-04 14:04:47.329] [jointLog] [info] Counted 47,933,038 total reads in the equivalence classes 
+[2024-11-04 14:04:47.333] [jointLog] [info] Number of mappings discarded because of alignment score : 36,299,795
+[2024-11-04 14:04:47.333] [jointLog] [info] Number of fragments entirely discarded because of alignment score : 5,318,859
+[2024-11-04 14:04:47.333] [jointLog] [info] Number of fragments discarded because they are best-mapped to decoys : 4,183,078
+[2024-11-04 14:04:47.333] [jointLog] [info] Number of fragments discarded because they have only dovetail (discordant) mappings to valid targets : 140,522
+[2024-11-04 14:04:47.333] [jointLog] [info] Mapping rate = 72.6552%
+
+[2024-11-04 14:04:47.333] [jointLog] [info] finished quantifyLibrary()
+[2024-11-04 14:04:47.333] [jointLog] [info] Starting optimizer
+[2024-11-04 14:04:47.353] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2024-11-04 14:04:47.356] [jointLog] [info] iteration = 0 | max rel diff. = 3407.12
+[2024-11-04 14:04:47.598] [jointLog] [info] iteration = 100 | max rel diff. = 15.2716
+[2024-11-04 14:04:47.839] [jointLog] [info] iteration = 200 | max rel diff. = 2.74256
+[2024-11-04 14:04:48.080] [jointLog] [info] iteration = 300 | max rel diff. = 0.213441
+[2024-11-04 14:04:48.321] [jointLog] [info] iteration = 400 | max rel diff. = 0.137727
+[2024-11-04 14:04:48.562] [jointLog] [info] iteration = 500 | max rel diff. = 0.299569
+[2024-11-04 14:04:48.803] [jointLog] [info] iteration = 600 | max rel diff. = 0.127668
+[2024-11-04 14:04:49.045] [jointLog] [info] iteration = 700 | max rel diff. = 0.478064
+[2024-11-04 14:04:49.286] [jointLog] [info] iteration = 800 | max rel diff. = 0.141504
+[2024-11-04 14:04:49.528] [jointLog] [info] iteration = 900 | max rel diff. = 0.0316571
+[2024-11-04 14:04:49.769] [jointLog] [info] iteration = 1,000 | max rel diff. = 0.0393018
+[2024-11-04 14:04:50.010] [jointLog] [info] iteration = 1,100 | max rel diff. = 0.0703252
+[2024-11-04 14:04:50.252] [jointLog] [info] iteration = 1,200 | max rel diff. = 0.163046
+[2024-11-04 14:04:50.486] [jointLog] [info] iteration = 1,298 | max rel diff. = 0.00947683
+[2024-11-04 14:04:50.488] [jointLog] [info] Finished optimizer
+[2024-11-04 14:04:50.488] [jointLog] [info] writing output 
+
+[2024-11-04 14:04:50.545] [jointLog] [info] Starting Bootstrapping
+[2024-11-04 14:04:50.554] [jointLog] [info] Will draw 100 bootstrap samples
+[2024-11-04 14:04:50.554] [jointLog] [info] Optimizing over 114,406 equivalence classes
+[2024-11-04 14:04:50.557] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2024-11-04 14:05:03.258] [jointLog] [info] wrote 1 bootstraps
+[2024-11-04 14:05:04.573] [jointLog] [info] wrote 2 bootstraps
+[2024-11-04 14:05:04.743] [jointLog] [info] wrote 3 bootstraps
+[2024-11-04 14:05:04.851] [jointLog] [info] wrote 4 bootstraps
+[2024-11-04 14:05:05.303] [jointLog] [info] wrote 5 bootstraps
+[2024-11-04 14:05:05.326] [jointLog] [info] wrote 6 bootstraps
+[2024-11-04 14:05:05.432] [jointLog] [info] wrote 7 bootstraps
+[2024-11-04 14:05:17.778] [jointLog] [info] wrote 8 bootstraps
+[2024-11-04 14:05:17.937] [jointLog] [info] wrote 9 bootstraps
+[2024-11-04 14:05:18.599] [jointLog] [info] wrote 10 bootstraps
+[2024-11-04 14:05:18.884] [jointLog] [info] wrote 11 bootstraps
+[2024-11-04 14:05:19.304] [jointLog] [info] wrote 12 bootstraps
+[2024-11-04 14:05:19.567] [jointLog] [info] wrote 13 bootstraps
+[2024-11-04 14:05:20.741] [jointLog] [info] wrote 14 bootstraps
+[2024-11-04 14:05:30.803] [jointLog] [info] wrote 15 bootstraps
+[2024-11-04 14:05:33.039] [jointLog] [info] wrote 16 bootstraps
+[2024-11-04 14:05:33.460] [jointLog] [info] wrote 17 bootstraps
+[2024-11-04 14:05:34.000] [jointLog] [info] wrote 18 bootstraps
+[2024-11-04 14:05:34.212] [jointLog] [info] wrote 19 bootstraps
+[2024-11-04 14:05:34.248] [jointLog] [info] wrote 20 bootstraps
+[2024-11-04 14:05:35.083] [jointLog] [info] wrote 21 bootstraps
+[2024-11-04 14:05:45.779] [jointLog] [info] wrote 22 bootstraps
+[2024-11-04 14:05:47.452] [jointLog] [info] wrote 23 bootstraps
+[2024-11-04 14:05:48.482] [jointLog] [info] wrote 24 bootstraps
+[2024-11-04 14:05:48.573] [jointLog] [info] wrote 25 bootstraps
+[2024-11-04 14:05:48.871] [jointLog] [info] wrote 26 bootstraps
+[2024-11-04 14:05:49.529] [jointLog] [info] wrote 27 bootstraps
+[2024-11-04 14:05:50.132] [jointLog] [info] wrote 28 bootstraps
+[2024-11-04 14:06:00.253] [jointLog] [info] wrote 29 bootstraps
+[2024-11-04 14:06:01.781] [jointLog] [info] wrote 30 bootstraps
+[2024-11-04 14:06:01.835] [jointLog] [info] wrote 31 bootstraps
+[2024-11-04 14:06:02.547] [jointLog] [info] wrote 32 bootstraps
+[2024-11-04 14:06:03.207] [jointLog] [info] wrote 33 bootstraps
+[2024-11-04 14:06:03.699] [jointLog] [info] wrote 34 bootstraps
+[2024-11-04 14:06:06.037] [jointLog] [info] wrote 35 bootstraps
+[2024-11-04 14:06:15.074] [jointLog] [info] wrote 36 bootstraps
+[2024-11-04 14:06:15.708] [jointLog] [info] wrote 37 bootstraps
+[2024-11-04 14:06:15.834] [jointLog] [info] wrote 38 bootstraps
+[2024-11-04 14:06:15.869] [jointLog] [info] wrote 39 bootstraps
+[2024-11-04 14:06:16.709] [jointLog] [info] wrote 40 bootstraps
+[2024-11-04 14:06:18.856] [jointLog] [info] wrote 41 bootstraps
+[2024-11-04 14:06:18.918] [jointLog] [info] wrote 42 bootstraps
+[2024-11-04 14:06:28.667] [jointLog] [info] wrote 43 bootstraps
+[2024-11-04 14:06:29.670] [jointLog] [info] wrote 44 bootstraps
+[2024-11-04 14:06:30.123] [jointLog] [info] wrote 45 bootstraps
+[2024-11-04 14:06:30.208] [jointLog] [info] wrote 46 bootstraps
+[2024-11-04 14:06:31.822] [jointLog] [info] wrote 47 bootstraps
+[2024-11-04 14:06:31.840] [jointLog] [info] wrote 48 bootstraps
+[2024-11-04 14:06:33.856] [jointLog] [info] wrote 49 bootstraps
+[2024-11-04 14:06:40.324] [jointLog] [info] wrote 50 bootstraps
+[2024-11-04 14:06:41.413] [jointLog] [info] wrote 51 bootstraps
+[2024-11-04 14:06:44.073] [jointLog] [info] wrote 52 bootstraps
+[2024-11-04 14:06:44.324] [jointLog] [info] wrote 53 bootstraps
+[2024-11-04 14:06:46.257] [jointLog] [info] wrote 54 bootstraps
+[2024-11-04 14:06:47.235] [jointLog] [info] wrote 55 bootstraps
+[2024-11-04 14:06:48.494] [jointLog] [info] wrote 56 bootstraps
+[2024-11-04 14:06:54.163] [jointLog] [info] wrote 57 bootstraps
+[2024-11-04 14:06:54.181] [jointLog] [info] wrote 58 bootstraps
+[2024-11-04 14:06:58.625] [jointLog] [info] wrote 59 bootstraps
+[2024-11-04 14:06:58.676] [jointLog] [info] wrote 60 bootstraps
+[2024-11-04 14:07:00.304] [jointLog] [info] wrote 61 bootstraps
+[2024-11-04 14:07:01.565] [jointLog] [info] wrote 62 bootstraps
+[2024-11-04 14:07:02.888] [jointLog] [info] wrote 63 bootstraps
+[2024-11-04 14:07:07.509] [jointLog] [info] wrote 64 bootstraps
+[2024-11-04 14:07:09.940] [jointLog] [info] wrote 65 bootstraps
+[2024-11-04 14:07:12.926] [jointLog] [info] wrote 66 bootstraps
+[2024-11-04 14:07:13.310] [jointLog] [info] wrote 67 bootstraps
+[2024-11-04 14:07:15.476] [jointLog] [info] wrote 68 bootstraps
+[2024-11-04 14:07:15.931] [jointLog] [info] wrote 69 bootstraps
+[2024-11-04 14:07:16.581] [jointLog] [info] wrote 70 bootstraps
+[2024-11-04 14:07:23.290] [jointLog] [info] wrote 71 bootstraps
+[2024-11-04 14:07:25.143] [jointLog] [info] wrote 72 bootstraps
+[2024-11-04 14:07:26.999] [jointLog] [info] wrote 73 bootstraps
+[2024-11-04 14:07:27.096] [jointLog] [info] wrote 74 bootstraps
+[2024-11-04 14:07:29.771] [jointLog] [info] wrote 75 bootstraps
+[2024-11-04 14:07:31.906] [jointLog] [info] wrote 76 bootstraps
+[2024-11-04 14:07:32.446] [jointLog] [info] wrote 77 bootstraps
+[2024-11-04 14:07:39.843] [jointLog] [info] wrote 78 bootstraps
+[2024-11-04 14:07:39.879] [jointLog] [info] wrote 79 bootstraps
+[2024-11-04 14:07:39.987] [jointLog] [info] wrote 80 bootstraps
+[2024-11-04 14:07:40.050] [jointLog] [info] wrote 81 bootstraps
+[2024-11-04 14:07:42.669] [jointLog] [info] wrote 82 bootstraps
+[2024-11-04 14:07:44.671] [jointLog] [info] wrote 83 bootstraps
+[2024-11-04 14:07:47.709] [jointLog] [info] wrote 84 bootstraps
+[2024-11-04 14:07:53.923] [jointLog] [info] wrote 85 bootstraps
+[2024-11-04 14:07:54.175] [jointLog] [info] wrote 86 bootstraps
+[2024-11-04 14:07:54.506] [jointLog] [info] wrote 87 bootstraps
+[2024-11-04 14:07:55.476] [jointLog] [info] wrote 88 bootstraps
+[2024-11-04 14:07:55.493] [jointLog] [info] wrote 89 bootstraps
+[2024-11-04 14:07:59.334] [jointLog] [info] wrote 90 bootstraps
+[2024-11-04 14:08:00.715] [jointLog] [info] wrote 91 bootstraps
+[2024-11-04 14:08:07.057] [jointLog] [info] wrote 92 bootstraps
+[2024-11-04 14:08:08.366] [jointLog] [info] wrote 93 bootstraps
+[2024-11-04 14:08:08.398] [jointLog] [info] wrote 94 bootstraps
+[2024-11-04 14:08:08.429] [jointLog] [info] wrote 95 bootstraps
+[2024-11-04 14:08:09.982] [jointLog] [info] wrote 96 bootstraps
+[2024-11-04 14:08:12.063] [jointLog] [info] wrote 97 bootstraps
+[2024-11-04 14:08:15.024] [jointLog] [info] wrote 98 bootstraps
+[2024-11-04 14:08:21.020] [jointLog] [info] wrote 99 bootstraps
+[2024-11-04 14:08:22.875] [jointLog] [info] wrote 100 bootstraps
+[2024-11-04 14:08:22.879] [jointLog] [info] Finished Bootstrapping

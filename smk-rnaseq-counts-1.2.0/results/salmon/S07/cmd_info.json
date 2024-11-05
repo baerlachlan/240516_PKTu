@@ -1,0 +1,11 @@
+{
+    "salmon_version": "1.10.3",
+    "index": "resources/salmon_index",
+    "libType": "A",
+    "mates1": "results/trim/fastq/S07_1_R1.fastq.gz",
+    "mates2": "results/trim/fastq/S07_1_R2.fastq.gz",
+    "output": "results/salmon/S07",
+    "threads": "8",
+    "numBootstraps": "100",
+    "auxDir": "aux_info"
+}
