@@ -200,10 +200,8 @@ tt <- readRDS(here("Rdata/tt.Rds")) %>%
 # DAR data
 
 ```{r}
-dar <- readRDS(here("Rdata/dar_1e4.Rds"))
-gene_dar <- flipRanges(dar) %>%
-    assignFeatureDar(genes, dar_val = "region", fill_missing = 0)
-saveRDS(gene_dar, here("Rdata/dar_1e4.Rds"))
+dar <- readRDS(here("Rdata/dar_1e6.Rds"))
+gene_dar <- readRDS(here("Rdata/gene_dar_1e6.Rds"))
 ```
 
 # Gene sets
@@ -515,7 +513,7 @@ tt_dar <- names(tt) %>%
         tt[[x]] %>%
             dplyr::filter(chr %in% primary_chrs) %>%
             left_join(as_tibble(gene_dar[[x]])[,c("gene_id", "dar")]) %>%
-            mutate(darP = pbeta(PValue, pmax(1 - 1.8 * dar, 0.1), 1)) %>%
+            mutate(darP = modP(PValue, dar, slope = 1.9)) %>%
             dplyr::arrange(darP)
     }) %>%
     set_names(names(tt))

@@ -1,0 +1,476 @@
+library(patchwork)
+library(ggside)
+
+theme_update(
+    axis.title.x = element_markdown(),
+    axis.title.y = element_markdown(),
+    title = element_markdown()
+)
+
+pal_paired <- brewer.pal(6, "Paired")
+
+seq_lengths <- seqlengths(genes) %>%
+    .[primary_chrs]
+
+tt <- readRDS(here("Rdata/tt.Rds"))
+gene_dar <- readRDS(here("Rdata/gene_dar_1e6.Rds"))
+
+psen1_midpoint <- genes %>%
+    as_tibble() %>%
+    dplyr::filter(gene_name == "psen1") %>%
+    mutate(midpoint = ((start + end) / 2) / seq_lengths["17"]) %>%
+    pull(midpoint)
+
+de_midpoint <- tt$pk_tu %>%
+    dplyr::filter(DE, chr == 14) %>%
+    mutate(midpoint = ((start + end) / 2) / seq_lengths["14"]) %>%
+    pull(midpoint)
+de_dar <- as_tibble(gene_dar$pk_tu) %>%
+    left_join(as_tibble(tt$pk_tu)[,c("gene_id", "chr", "DE")]) %>%
+    dplyr::filter(DE, chr == 14) %>%
+    pull(dar)
+dar_1e6$pk_tu %>%
+    as_tibble() %>%
+    split(.$seqnames) %>%
+    lapply(\(x){
+        chr <- unique(x$seqnames)
+        chr_length <- seq_lengths[as.character(chr)]
+        x %>%
+            mutate(rel_position = start /chr_length)
+    }) %>%
+    bind_rows() %>%
+    mutate(
+        point_group = ifelse(seqnames == "14", "pt_true", "pt_false"),
+        point_group = fct_relevel(as.character(point_group), "pt_false"),
+        line_group = ifelse(seqnames == "14", "ln_true", "ln_false"),
+        line_group = fct_relevel(as.character(line_group), "ln_false"),
+    ) %>%
+    dplyr::arrange(point_group) %>%
+    ggplot(aes(rel_position, dar_region)) +
+    geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_smooth(aes(colour = line_group), se = FALSE) +
+    geom_xsidevline(xintercept = de_midpoint, linetype = "solid", colour = "darkred") +
+    geom_ysidehline(yintercept = de_dar, linetype = "solid", colour = "darkred") +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+    scale_colour_manual(
+        values = c(
+            "pt_true" = pal_paired[5], "ln_true" = pal_paired[6],
+            "pt_false" = pal_paired[1], "ln_false" = pal_paired[2]
+        ),
+        labels = c("ln_true" = "True", "ln_false" = "False"),
+        breaks = c("ln_true", "ln_false")
+    ) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    labs(
+        title = "*PK<sup>D</sup>/PK<sup>D</sup>* vs. *TU<sup>A</sup>/TU<sup>B</sup>*",
+        x = "Relative Chromosomal Position",
+        y = "DAR (region)",
+        colour = "Chromosome 14"
+    ) +
+    theme_pubclean() +
+    theme(
+        axis.title.x = element_markdown(),
+        axis.title.y = element_markdown(),
+        title = element_markdown(),
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = -45, hjust = 0, vjust = 0.5),
+        plot.margin = unit(c(.2, 1, .2, .2), "cm"),
+        ggside.panel.scale.x = 0.025,
+        ggside.panel.scale.y = 0.01875
+    ) +
+    ggside(x.pos = "bottom", y.pos = "left")
+ggsave(
+    "~/phd/publications/pktu_manuscript/fig/dar_chr14_pktu.png",
+    width = 8, height = 6
+)
+
+de_midpoint <- tt$pk_het %>%
+    dplyr::filter(DE, chr == 14) %>%
+    mutate(midpoint = ((start + end) / 2) / seq_lengths["14"]) %>%
+    pull(midpoint)
+de_dar <- as_tibble(gene_dar$pk_het) %>%
+    left_join(as_tibble(tt$pk_het)[,c("gene_id", "chr", "DE")]) %>%
+    dplyr::filter(DE, chr == 14) %>%
+    pull(dar)
+a <- dar_1e6$pk_het %>%
+    as_tibble() %>%
+    split(.$seqnames) %>%
+    lapply(\(x){
+        chr <- unique(x$seqnames)
+        chr_length <- seq_lengths[as.character(chr)]
+        x %>%
+            mutate(rel_position = start /chr_length)
+    }) %>%
+    bind_rows() %>%
+    mutate(
+        point_group = ifelse(seqnames == "14", "pt_true", "pt_false"),
+        point_group = fct_relevel(as.character(point_group), "pt_false"),
+        line_group = ifelse(seqnames == "14", "ln_true", "ln_false"),
+        line_group = fct_relevel(as.character(line_group), "ln_false"),
+    ) %>%
+    dplyr::arrange(point_group) %>%
+    ggplot(aes(rel_position, dar_region)) +
+    geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_smooth(aes(colour = line_group), se = FALSE) +
+    geom_xsidevline(xintercept = de_midpoint, linetype = "solid", colour = "darkred") +
+    geom_ysidehline(yintercept = de_dar, linetype = "solid", colour = "darkred") +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+    scale_colour_manual(
+        values = c(
+            "pt_true" = pal_paired[5], "ln_true" = pal_paired[6],
+            "pt_false" = pal_paired[1], "ln_false" = pal_paired[2]
+        ),
+        labels = c("ln_true" = "True", "ln_false" = "False"),
+        breaks = c("ln_true", "ln_false")
+    ) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    labs(
+        title = "*PK<sup>D</sup>/PK<sup>D</sup>* vs. *TU<sup>B</sup>/PK<sup>D</sup>*",
+        x = "Relative Chromosomal Position",
+        y = "DAR (region)",
+        colour = "Chromosome 14"
+    ) +
+    theme_pubclean() +
+    theme(
+        axis.title.x = element_markdown(),
+        axis.title.y = element_markdown(),
+        title = element_markdown(),
+        legend.position = "right",
+        axis.text.x = element_text(angle = -45, hjust = 0, vjust = 0.5)
+    ) +
+    ggside(x.pos = "bottom", y.pos = "left")
+de_midpoint <- tt$tu_het %>%
+    dplyr::filter(DE, chr == 14) %>%
+    mutate(midpoint = ((start + end) / 2) / seq_lengths["14"]) %>%
+    pull(midpoint)
+de_dar <- as_tibble(gene_dar$tu_het) %>%
+    left_join(as_tibble(tt$tu_het)[,c("gene_id", "chr", "DE")]) %>%
+    dplyr::filter(DE, chr == 14) %>%
+    pull(dar)
+b <- dar_1e6$tu_het %>%
+    as_tibble() %>%
+    split(.$seqnames) %>%
+    lapply(\(x){
+        chr <- unique(x$seqnames)
+        chr_length <- seq_lengths[as.character(chr)]
+        x %>%
+            mutate(rel_position = start /chr_length)
+    }) %>%
+    bind_rows() %>%
+    mutate(
+        point_group = ifelse(seqnames == "14", "pt_true", "pt_false"),
+        point_group = fct_relevel(as.character(point_group), "pt_false"),
+        line_group = ifelse(seqnames == "14", "ln_true", "ln_false"),
+        line_group = fct_relevel(as.character(line_group), "ln_false"),
+    ) %>%
+    dplyr::arrange(point_group) %>%
+    ggplot(aes(rel_position, dar_region)) +
+    geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_smooth(aes(colour = line_group), se = FALSE) +
+    geom_xsidevline(xintercept = 0.5, linetype = "blank", colour = "darkred") +
+    geom_ysidehline(yintercept = 0.5, linetype = "blank", colour = "darkred") +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+    scale_colour_manual(
+        values = c(
+            "pt_true" = pal_paired[5], "ln_true" = pal_paired[6],
+            "pt_false" = pal_paired[1], "ln_false" = pal_paired[2]
+        ),
+        labels = c("ln_true" = "True", "ln_false" = "False"),
+        breaks = c("ln_true", "ln_false")
+    ) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    labs(
+        title = "*TU<sup>A</sup>/TU<sup>B</sup>* vs. *TU<sup>B</sup>/PK<sup>D</sup>*",
+        x = "Relative Chromosomal Position",
+        y = "DAR (region)",
+        colour = "Chromosome 14"
+    ) +
+    theme_pubclean() +
+    theme(
+        axis.title.x = element_markdown(),
+        axis.title.y = element_markdown(),
+        title = element_markdown(),
+        legend.position = "right",
+        axis.text.x = element_text(angle = -45, hjust = 0, vjust = 0.5)
+    ) +
+    ggside(x.pos = "bottom", y.pos = "left")
+a + b +
+    plot_layout(ncol = 1, guides = "collect") +
+    plot_annotation(tag_levels = "A") &
+    theme(
+        legend.position = "bottom",
+        plot.margin = unit(c(.2, .5, .2, .2), "cm"),
+        ggside.panel.scale.x = 0.025 * 2,
+        ggside.panel.scale.y = 0.015
+    )
+ggsave(
+    "~/phd/publications/pktu_manuscript/fig/dar_chr14_hets.png",
+    width = 8, height = 8
+)
+
+de_midpoint <- tt$eofad_wt %>%
+    dplyr::filter(DE, chr == 17) %>%
+    mutate(midpoint = ((start + end) / 2) / seq_lengths["17"]) %>%
+    pull(midpoint)
+de_dar <- as_tibble(gene_dar$eofad_wt) %>%
+    left_join(as_tibble(tt$eofad_fai)[,c("gene_id", "chr", "DE")]) %>%
+    dplyr::filter(DE, chr == 17) %>%
+    pull(dar)
+c <- dar_1e6$eofad_wt %>%
+    as_tibble() %>%
+    split(.$seqnames) %>%
+    lapply(\(x){
+        chr <- unique(x$seqnames)
+        chr_length <- seq_lengths[as.character(chr)]
+        x %>%
+            mutate(rel_position = start /chr_length)
+    }) %>%
+    bind_rows() %>%
+    mutate(
+        point_group = ifelse(seqnames == "17", "pt_true", "pt_false"),
+        point_group = fct_relevel(as.character(point_group), "pt_false"),
+        line_group = ifelse(seqnames == "17", "ln_true", "ln_false"),
+        line_group = fct_relevel(as.character(line_group), "ln_false"),
+    ) %>%
+    dplyr::arrange(point_group) %>%
+    ggplot(aes(rel_position, dar_region)) +
+    geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_smooth(aes(colour = line_group), se = FALSE) +
+    geom_vline(xintercept = psen1_midpoint, linetype = "dashed") +
+    geom_ysidehline(yintercept = de_dar, linetype = "solid", colour = "darkred") +
+    geom_text(x = psen1_midpoint - .05, y = 0.95, label = "psen1", fontface = "italic") +
+    geom_xsidevline(xintercept = de_midpoint, linetype = "solid", colour = "darkred") +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+    scale_colour_manual(
+        values = c(
+            "pt_true" = pal_paired[5], "ln_true" = pal_paired[6],
+            "pt_false" = pal_paired[1], "ln_false" = pal_paired[2]
+        ),
+        labels = c("ln_true" = "True", "ln_false" = "False"),
+        breaks = c("ln_true", "ln_false")
+    ) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    labs(
+        title = "*TU<sup>T428del</sup>/PK<sup>+</sup>* vs. *PK<sup>+</sup>/PK<sup>+</sup>*",
+        x = "Relative Chromosomal Position",
+        y = "DAR (region)",
+        colour = "Chromosome 17"
+    ) +
+    theme_pubclean() +
+    theme(
+        axis.title.x = element_markdown(),
+        axis.title.y = element_markdown(),
+        title = element_markdown(),
+        legend.position = "right",
+        axis.text.x = element_text(angle = -45, hjust = 0, vjust = 0.5)
+    ) +
+    ggside(x.pos = "bottom", y.pos = "left")
+de_midpoint <- tt$fai_wt %>%
+    dplyr::filter(DE, chr == 17) %>%
+    mutate(midpoint = ((start + end) / 2) / seq_lengths["17"]) %>%
+    pull(midpoint)
+de_dar <- as_tibble(gene_dar$fai_wt) %>%
+    left_join(as_tibble(tt$fai_wt)[,c("gene_id", "chr", "DE")]) %>%
+    dplyr::filter(DE, chr == 17) %>%
+    pull(dar)
+d <- dar_1e6$fai_wt %>%
+    as_tibble() %>%
+    split(.$seqnames) %>%
+    lapply(\(x){
+        chr <- unique(x$seqnames)
+        chr_length <- seq_lengths[as.character(chr)]
+        x %>%
+            mutate(rel_position = start /chr_length)
+    }) %>%
+    bind_rows() %>%
+    mutate(
+        point_group = ifelse(seqnames == "17", "pt_true", "pt_false"),
+        point_group = fct_relevel(as.character(point_group), "pt_false"),
+        line_group = ifelse(seqnames == "17", "ln_true", "ln_false"),
+        line_group = fct_relevel(as.character(line_group), "ln_false"),
+    ) %>%
+    dplyr::arrange(point_group) %>%
+    ggplot(aes(rel_position, dar_region)) +
+    geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_smooth(aes(colour = line_group), se = FALSE) +
+    geom_vline(xintercept = psen1_midpoint, linetype = "dashed") +
+    geom_text(x = psen1_midpoint - .05, y = 0.95, label = "psen1", fontface = "italic") +
+    geom_xsidevline(xintercept = de_midpoint, linetype = "solid", colour = "darkred") +
+    geom_ysidehline(yintercept = de_dar, linetype = "solid", colour = "darkred") +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+    scale_colour_manual(
+        values = c(
+            "pt_true" = pal_paired[5], "ln_true" = pal_paired[6],
+            "pt_false" = pal_paired[1], "ln_false" = pal_paired[2]
+        ),
+        labels = c("ln_true" = "True", "ln_false" = "False"),
+        breaks = c("ln_true", "ln_false")
+    ) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    labs(
+        title = "*TU<sup>W233fs</sup>/PK<sup>+</sup>* vs. *PK<sup>+</sup>/PK<sup>+</sup>*",
+        x = "Relative Chromosomal Position",
+        y = "DAR (region)",
+        colour = "Chromosome 17"
+    ) +
+    theme_pubclean() +
+    theme(
+        axis.title.x = element_markdown(),
+        axis.title.y = element_markdown(),
+        title = element_markdown(),
+        legend.position = "right",
+        axis.text.x = element_text(angle = -45, hjust = 0, vjust = 0.5)
+    ) +
+    ggside(x.pos = "bottom", y.pos = "left")
+c + d +
+    plot_layout(ncol = 1, guides = "collect") +
+    plot_annotation(tag_levels = "A") &
+    theme(
+        legend.position = "bottom",
+        plot.margin = unit(c(.2, .5, .2, .2), "cm"),
+        ggside.panel.scale.x = 0.025 * 2,
+        ggside.panel.scale.y = 0.015
+    )
+# ggarrange(c, d, ncol = 1, labels = c("A", "B"), legend = "bottom", common.legend = TRUE)
+ggsave(
+    "~/phd/publications/pktu_manuscript/fig/dar_chr17_eofadwt_faiwt.png",
+    width = 8, height = 8
+)
+
+de_midpoint <- tt$eofad_fai %>%
+    dplyr::filter(DE, chr == 17) %>%
+    mutate(midpoint = ((start + end) / 2) / seq_lengths["17"]) %>%
+    pull(midpoint)
+de_dar <- as_tibble(gene_dar$eofad_fai) %>%
+    left_join(as_tibble(tt$eofad_fai)[,c("gene_id", "chr", "DE")]) %>%
+    dplyr::filter(DE, chr == 17) %>%
+    pull(dar)
+dar_1e6$eofad_fai %>%
+    as_tibble() %>%
+    split(.$seqnames) %>%
+    lapply(\(x){
+        chr <- unique(x$seqnames)
+        chr_length <- seq_lengths[as.character(chr)]
+        x %>%
+            mutate(rel_position = start /chr_length)
+    }) %>%
+    bind_rows() %>%
+    mutate(
+        point_group = ifelse(seqnames == "17", "pt_true", "pt_false"),
+        point_group = fct_relevel(as.character(point_group), "pt_false"),
+        line_group = ifelse(seqnames == "17", "ln_true", "ln_false"),
+        line_group = fct_relevel(as.character(line_group), "ln_false"),
+    ) %>%
+    dplyr::arrange(point_group) %>%
+    ggplot(aes(rel_position, dar_region)) +
+    geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_smooth(aes(colour = line_group), se = FALSE) +
+    geom_vline(xintercept = psen1_midpoint, linetype = "dotted") +
+    geom_text(x = psen1_midpoint - .05, y = 0.95, label = "psen1", fontface = "italic") +
+    geom_xsidevline(xintercept = de_midpoint, linetype = "solid", colour = "darkred") +
+    geom_ysidehline(yintercept = de_dar, linetype = "solid", colour = "darkred") +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+    scale_colour_manual(
+        values = c(
+            "pt_true" = pal_paired[5], "ln_true" = pal_paired[6],
+            "pt_false" = pal_paired[1], "ln_false" = pal_paired[2]
+        ),
+        labels = c("ln_true" = "True", "ln_false" = "False"),
+        breaks = c("ln_true", "ln_false")
+    ) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    labs(
+        title = "*TU<sup>T428del</sup>/PK<sup>+</sup>* vs. *TU<sup>W233fs</sup>/PK<sup>+</sup>*",
+        x = "Relative Chromosomal Position",
+        y = "DAR (region)",
+        colour = "Chromosome 17"
+    ) +
+    theme_pubclean() +
+    theme(
+        axis.title.x = element_markdown(),
+        axis.title.y = element_markdown(),
+        title = element_markdown(),
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = -45, hjust = 0, vjust = 0.5),
+        plot.margin = unit(c(.2, 1, .2, .2), "cm"),
+        ggside.panel.scale.x = 0.025,
+        ggside.panel.scale.y = 0.01875
+    ) +
+    ggside(x.pos = "bottom", y.pos = "left")
+ggsave(
+    "~/phd/publications/pktu_manuscript/fig/dar_chr17_eofadfai.png",
+    width = 8, height = 6
+)
+
+
+
+
+
+
+
+de_midpoint <- tt$tu_het %>%
+    dplyr::filter(DE, chr == 17) %>%
+    mutate(midpoint = ((start + end) / 2) / seq_lengths["14"]) %>%
+    pull(midpoint)
+de_dar <- as_tibble(gene_dar$tu_het) %>%
+    left_join(as_tibble(tt$tu_het)[,c("gene_id", "chr", "DE")]) %>%
+    dplyr::filter(DE, chr == 17) %>%
+    pull(dar)
+dar_1e6$tu_het %>%
+    as_tibble() %>%
+    split(.$seqnames) %>%
+    lapply(\(x){
+        chr <- unique(x$seqnames)
+        chr_length <- seq_lengths[as.character(chr)]
+        x %>%
+            mutate(rel_position = start /chr_length)
+    }) %>%
+    bind_rows() %>%
+    mutate(
+        point_group = ifelse(seqnames == "17", "pt_true", "pt_false"),
+        point_group = fct_relevel(as.character(point_group), "pt_false"),
+        line_group = ifelse(seqnames == "17", "ln_true", "ln_false"),
+        line_group = fct_relevel(as.character(line_group), "ln_false"),
+    ) %>%
+    dplyr::arrange(point_group) %>%
+    ggplot(aes(rel_position, dar_region)) +
+    geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_smooth(aes(colour = line_group), se = FALSE) +
+    # geom_xsidevline(xintercept = de_midpoint, linetype = "solid", colour = "darkred") +
+    # geom_ysidehline(yintercept = de_dar, linetype = "solid", colour = "darkred") +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+    scale_colour_manual(
+        values = c(
+            "pt_true" = pal_paired[5], "ln_true" = pal_paired[6],
+            "pt_false" = pal_paired[1], "ln_false" = pal_paired[2]
+        ),
+        labels = c("ln_true" = "True", "ln_false" = "False"),
+        breaks = c("ln_true", "ln_false")
+    ) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    labs(
+        title = "*PK<sup>D</sup>/PK<sup>D</sup>* vs. *TU<sup>A</sup>/TU<sup>B</sup>*",
+        x = "Relative Chromosomal Position",
+        y = "DAR (region)",
+        colour = "Chromosome 14"
+    ) +
+    theme_pubclean() +
+    theme(
+        axis.title.x = element_markdown(),
+        axis.title.y = element_markdown(),
+        title = element_markdown(),
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = -45, hjust = 0, vjust = 0.5),
+        plot.margin = unit(c(.2, 1, .2, .2), "cm"),
+        ggside.panel.scale.x = 0.025,
+        ggside.panel.scale.y = 0.01875
+    ) +
+    ggside(x.pos = "bottom", y.pos = "left")
+

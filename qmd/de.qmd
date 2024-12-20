@@ -123,7 +123,7 @@ pal_group <- c(
     "wt_tu" = pal1[7], "wt_pk" = pal1[8], "wt_het" = pal1[10],
     "eofad" = pal2[1], "fai" = pal2[2], "wt" = pal2[3],
     "pk" = pal2[4], "tu" = pal2[5], "het" = pal2[6]
-) 
+)
 ```
 
 # Annotations
@@ -187,7 +187,7 @@ Gene-level estimates of GC content and length were also generated which are requ
 # Counts
 
 ```{r counts}
-counts <- read_tsv(here("smk-de/results/count/stranded/all.featureCounts"), comment = "#") %>%
+counts <- read_tsv(here("smk-rnaseq-counts-1.2.0/results/count/stranded/all.featureCounts"), comment = "#") %>%
     dplyr::select(-c(Chr, Start, End, Strand, Length)) %>%
     set_colnames(basename(colnames(.))) %>%
     set_colnames(str_remove(colnames(.), "\\.bam")) %>%
@@ -477,7 +477,7 @@ The design matrix was defined containing an intercept representing baseline expr
 The remaining two columns represent the presence of either the EofAD or fAI mutant alleles.
 
 ```{r design_psen1}
-design_psen1 <- model.matrix(~0 + geno_psen1, data = dge_list$samples) %>%
+design_psen1 <- model.matrix(~0 + geno_psen1 + geno_chr14, data = dge_list$samples) %>%
     set_colnames(str_remove(colnames(.), "geno_psen1"))
 ```
 
@@ -871,7 +871,7 @@ The design matrix was defined containing an intercept representing baseline expr
 The remaining two columns represent the presence of either the EofAD or fAI mutant alleles.
 
 ```{r design_chr14}
-design_chr14 <- model.matrix(~0 + geno_chr14, data = dge_list$samples) %>%
+design_chr14 <- model.matrix(~0 + geno_chr14 + geno_psen1, data = dge_list$samples) %>%
     set_colnames(str_remove(colnames(.), "geno_chr14"))
 ```
 

@@ -1,0 +1,818 @@
+---
+title: "PKTu"
+subtitle: "DTU Analysis (Cycloheximide)"
+author: "Lachlan Baer"
+date-modified: today
+date-format: "DD MMMM, YYYY"
+modified-title: "LAST MODIFIED"
+code-fold: true
+fig-width: 8
+fig-height: 6
+fig-align: center
+editor_options:
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE,
+    message = FALSE,
+    warning = FALSE,
+    error = FALSE,
+    fig.align = "center"
+)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+```{r pkgs}
+suppressPackageStartupMessages({
+    ## Common packages
+    library(tidyverse)
+    library(magrittr)
+    library(here)
+    library(kableExtra)
+    library(RColorBrewer)
+    library(ggpubr)
+    library(scales)
+    library(AnnotationHub)
+    library(ggrepel)
+    library(ggtext)
+    library(ggside)
+    library(glue)
+    library(pander)
+    library(DT)
+    library(reactable)
+    library(htmltools)
+    ## Document-specific packages
+    library(limma)
+    library(tximport)
+    library(DRIMSeq)
+    library(DEXSeq)
+    library(stageR)
+    library(IsoformSwitchAnalyzeR)
+    library(ggvenn)
+})
+```
+
+```{r opts}
+theme_set(theme_bw())
+theme_update(
+    title = element_markdown(),
+    axis.title.x = element_markdown(),
+    axis.title.y = element_markdown(),
+    strip.background = element_blank(),
+    strip.text = element_textbox(
+        size = 10,
+        color = "black", fill = "white", box.color = "black",
+        halign = 0.5, linetype = 1, width = unit(1, "npc"),
+        padding = margin(3, 0, 1, 0), margin = margin(0, 0, 0, 0)
+    )
+)
+pal <- brewer.pal(8, "Set2")
+```
+
+```{r lb_reactable}
+lb_reactable <- function(
+        tbl, highlight = TRUE, striped = TRUE, compact = TRUE,
+        wrap = FALSE, resizable = TRUE, searchable = TRUE,
+        style = list(fontFamily = "Calibri, sans-serif"), ...
+){
+    reactable(
+        tbl,
+        highlight = highlight, striped = striped, compact = compact,
+        wrap = wrap, resizable = TRUE, searchable = TRUE,
+        style = style, ...
+    )
+}
+tooltip <- function(value, tooltip) {
+    tags$abbr(
+        style = "text-decoration: underline; text-decoration-style: solid; cursor: help",
+        title = tooltip,
+        value
+    )
+}
+react_format <- function(format, digits = 2){
+    function(val, ind, col_name){
+        formatC(val, digits = digits, format = format)
+    }
+}
+```
+
+# Metadata
+
+```{r meta}
+meta <- read_csv(here("misc/metadata.csv")) %>%
+    mutate(
+        geno_psen1 = fct_relevel(geno_psen1, c("wt", "eofad", "fai")),
+        geno_chr14 = fct_relevel(geno_chr14, c("tu", "pk", "het")),
+        geno_joint = fct_relevel(geno_joint, unique(geno_joint))
+    )
+meta %>%
+    kable(
+        align = "l",
+        caption = "Sample metadata"
+    ) %>%
+    kable_styling(
+        bootstrap_options = c("striped", "hover", "condensed", "responsive")
+    )
+```
+
+```{r pal_group}
+pal1 <- brewer.pal(12, "Set3")
+pal2 <- brewer.pal(8, "Set2")
+pal_group <- c(
+    "eofad_tu" = pal1[1], "eofad_pk" = pal1[2], "eofad_het" = pal1[3],
+    "fai_tu" = pal1[4], "fai_pk" = pal1[5], "fai_het" = pal1[6],
+    "wt_tu" = pal1[7], "wt_pk" = pal1[8], "wt_het" = pal1[10],
+    "eofad" = pal2[1], "fai" = pal2[2], "wt" = pal2[3],
+    "pk" = pal2[4], "tu" = pal2[5], "het" = pal2[6]
+)
+```
+
+# Annotations
+
+```{r ensParams}
+ens_species <- "Danio rerio"
+ens_release <- "111"
+ens_assembly <- "GRCz11"
+```
+
+```{r ensDb}
+ah <- AnnotationHub() %>%
+    subset(species == ens_species) %>%
+    subset(rdataclass == "EnsDb")
+ahId <- ah$ah_id[str_detect(ah$title, ens_release)]
+ensDb <- ah[[ahId]]
+```
+
+```{r primary_chrs}
+primary_chrs <- c(as.character(1:25), "MT")
+```
+
+```{r transcripts}
+transcripts <- transcripts(ensDb)
+tx_len <- exonsBy(ensDb, "tx") %>%
+    width() %>%
+    lapply(sum) %>%
+    unlist(use.names = TRUE) %>%
+    enframe(name = "tx_id", value = "length")
+mcols(transcripts) <- mcols(transcripts)[
+    c("gene_id", "tx_id", "tx_id_version", "tx_biotype", "gc_content")
+] %>%
+    as.data.frame() %>%
+    left_join(tx_len)
+```
+
+```{r genes}
+genes <- genes(ensDb)
+gene_gclen <- transcripts %>%
+    mcols() %>%
+    as_tibble() %>%
+    group_by(gene_id) %>%
+    summarise(
+        gc_content = sum(gc_content*length) / sum(length),
+        length = ceiling(median(length))
+    )
+mcols(genes) <- mcols(genes)[
+    c("gene_id", "gene_name", "gene_biotype", "description")
+] %>%
+    as.data.frame() %>%
+    left_join(gene_gclen)
+```
+
+```{r tx2gene}
+tx2gene <- transcripts(ensDb) %>%
+    as_tibble() %>%
+    dplyr::select(tx_id, tx_id_version, gene_id) %>%
+    dplyr::arrange(gene_id)
+tx2gene_version <-  dplyr::select(tx2gene, tx_id_version, gene_id)
+tx2gene <- dplyr::select(tx2gene, tx_id, gene_id)
+```
+
+An `EnsDb` object was obtained for Ensembl release `r ens_release` with the `AnnotationHub` package.
+This contained the information required to set up gene and transcript annotations.
+
+# DTU
+
+The `DEXSeq` package was originally designed for detecting differential exon usage (Anders, Reyes, and Huber 2012), but can also be adapted to run on estimated transcript counts, in order to detect DTU.
+Using DEXSeq on transcript counts was evaluated by Soneson et al. (2016), showing the benefits in FDR control from filtering lowly expressed transcripts for a transcript-level analysis.
+
+## Counts
+
+`tximport` was used to import the estimated counts, abundances and effective transcript lengths reported by `Salmon` into R.
+Here we take the approach of generating "counts from abundance".
+This involves firstly scaling transcript-per-million (TPM) abundance estimates within each gene by the median of the mean effective transcript length over samples.
+Median length-scaled abundance estimates are then scaled further such that they sum to the total number of mapped reads per sample.
+This scaling method was designed specifically for DTU analysis, and is implemented with the `tximport()` function by specifying `countsFromAbundance = "dtuScaledTPM"`.
+Since all TPMs for samples within a gene are scaled by the same value, we avoid issues that could arise if there was a change in transcript usage among transcripts of different length.
+This could result in a changed total count for the gene, even if there is no change in total gene expression.
+A change in the total count for the gene could then bias the calculation of proportions and therefore confound DTU analysis.
+For DTU analysis using DEXSeq, it is convenient if the count-scale data do not scale with transcript length within a gene.
+This could be corrected by an offset, but is not easily implemented in the current DTU analysis packages.
+
+```{r quant}
+quant <- list.files(
+    here("smk-rnaseq-counts-1.2.0/results/salmon"),
+    pattern = "quant.sf", recursive = TRUE, full.names = TRUE
+)
+names(quant) <- basename(dirname(quant))
+```
+
+```{r counts}
+txi <- tximport(
+    quant, type = "salmon", txOut = TRUE, tx2gene = tx2gene_version,
+    countsFromAbundance = "dtuScaledTPM"
+)
+## Fix colnames
+colnames(txi$counts) <- str_replace_all(colnames(txi$counts), "-", ".")
+colnames(txi$abundance) <- str_replace_all(colnames(txi$abundance), "-", ".")
+## Remove transcript versioning from their names
+rownames(txi$counts) <- str_remove_all(rownames(txi$counts), "\\.\\d+")
+## Subset for only transcripts in our filtered annotation object
+## Also subset for samples present in our metadata
+counts <- txi$counts
+counts <- counts[
+    rownames(counts) %in% transcripts$tx_id,
+    colnames(counts) %in% meta$sample
+]
+txdf <- tx2gene[match(rownames(counts),tx2gene$tx_id),]
+counts <- data.frame(
+    gene_id = txdf$gene_id, feature_id = txdf$tx_id, counts
+)
+```
+
+```{r drim}
+samps <- meta %>%
+    mutate(sample = str_replace_all(sample, "-", ".")) %>%
+    dplyr::select(sample_id = sample, condition = geno_joint) %>%
+    as.data.frame()
+drim <- dmDSdata(counts = counts, samples = samps)
+```
+
+Before estimating the model parameters we filter our counts object.
+This speeds up the process of fitting while also removing transcripts that may compromise parameter estimation (e.g. estimating expression proportions of transcripts within a gene with a very low total count).
+Here we apply three different filters using the `DRIMSeq` package.
+We specify criteria that a minumum number of samples must satisfy, otherwise the transcript is removed from the dataset.
+The minimum number of samples (`n_samps`) is determined to be the number of samples in the smallest experimental group.
+The criteria for keeping a transcript is as follows:
+
+1. Counts > 10 in > `n_samps` samples
+2. Relative abundance proportion > 0.1 in > `n_samps` samples
+3. Total counts > 10 across all samples
+
+Following filtering, only genes that have only one isoform are also removed, as we require at least two isoforms to test DTU.
+
+```{r counts_filt}
+n_samps <- length(meta$sample)
+min_samps <- meta %>%
+    group_by(geno_joint) %>%
+    summarise(n = n()) %>%
+    pull(n) %>%
+    min()
+drim_filt <- dmFilter(
+    drim,
+    min_samps_feature_expr = min_samps, min_feature_expr = 10,
+    min_samps_feature_prop = min_samps, min_feature_prop = 0.1,
+    min_samps_gene_expr = n_samps, min_gene_expr = 10
+)
+counts_filt <- DRIMSeq::counts(drim_filt)
+```
+
+Filtering removed `r length(unique(counts$feature_id)) - length(unique(counts_filt$feature_id))` transcripts and `r length(unique(counts$gene_id)) - length(unique(counts_filt$gene_id))` genes from the dataset. 
+`r length(unique(counts_filt$feature_id))` transcripts (from `r length(unique(counts_filt$gene_id))` genes) remained for further analysis.
+
+```{r n_isoforms}
+## Make this into a histogram
+table(table(counts(drim_filt)$gene_id)) %>%
+    enframe(name = "isoforms", value = "count") %>%
+    mutate(count = as.numeric(count)) %>%
+    ggplot(aes(isoforms, count, fill = isoforms)) +
+    geom_bar(stat = "identity", colour = "black", linewidth = 1) +
+    labs(
+        title = "Isoforms per gene",
+        x = "Number of isoforms",
+        y = "Count",
+        fill = "Isoforms"
+    )
+```
+
+## Screening
+
+A typical analysis of differential transcript usage would involve asking first, “which genes contain any evidence of DTU?”, and secondly, “which transcripts in the genes that contain some evidence may be participating in the DTU?”
+Note that a gene may pass the first stage without exhibiting enough evidence to identify one or more transcripts that are participating in DTU.
+The stageR package is designed to allow for such two-stage testing procedures, where the first stage is called a screening stage and the second stage a confirmation stage (Van den Berge et al. 2017).
+
+First we specify which groups to compare by setting up a contrast matrix.
+
+```{r contrasts}
+contrasts <- makeContrasts(
+    # eofad_wt = eofad - wt,
+    # fai_wt = fai - wt,
+    # eofad_fai = eofad - fai,
+    pk_tu = pk - tu,
+    pk_het = pk - het,
+    tu_het = tu - het,
+    # levels = levels(c(meta$geno_psen1, meta$geno_chr14))
+    levels = levels(meta$geno_chr14)
+)
+pander(contrasts)
+```
+
+The following code chunk runs the `DEXSeq` analysis.
+
+```{r dex}
+dex <- apply(contrasts, 2, \(x){
+    # browser()
+    cntrst <- names(x)[x != 0]
+    samps <- meta %>%
+        dplyr::filter(geno_chr14 %in% cntrst) %>%
+        dplyr::select(sample_id = sample, condition = geno_chr14)
+    cols <- samps$sample_id
+    cnts <- round(as.matrix(counts_filt[,cols]))
+    DEXSeqDataSet(
+        countData = cnts,
+        sampleData = samps,
+        design = ~sample + exon + condition:exon,
+        featureID = counts_filt$feature_id,
+        groupID = counts_filt$gene_id
+    ) %>%
+        estimateSizeFactors() %>%
+        estimateDispersions(quiet = TRUE) %>%
+        testForDEU(reducedModel = ~ sample + exon)
+}, simplify = FALSE)
+```
+
+We then extract the results table.
+We compute a per-gene adjusted p-value, using the perGeneQValue function, which aggregates evidence from multiple tests within a gene to a single p-value for the gene and then corrects for multiple testing across genes (Anders, Reyes, and Huber 2012).
+Finally, we build a simple results table with the per-gene adjusted p-values.
+
+```{r dex_res}
+dex_tx <- lapply(dex, \(x){
+    DEXSeqResults(x, independentFiltering=FALSE)
+})
+dex_screen <- lapply(dex_tx, \(x){
+    perGeneQValue(x)
+})
+dex_gene <- lapply(dex_screen, \(x){
+    data.frame(gene_id = names(x), qval = x)
+})
+```
+
+## Confirmation
+
+```{r dex_conf}
+dex_conf <- lapply(dex_tx, \(x){
+    x <- as.data.frame(x)
+    x$pvalue <- ifelse(is.na(x$pvalue), 1, x$pvalue)
+    mat <- matrix(x$pvalue, ncol = 1)
+    dimnames(mat) <- list(x$featureID, "transcript")
+    mat
+})
+tx2gene_dex <- lapply(dex_tx, \(x){
+    as.data.frame(x[,c("featureID", "groupID")])
+})
+```
+
+We must specify an alpha, which will be the overall false discovery rate target for the analysis.
+Unlike typical adjusted p-values or q-values, we cannot choose an arbitrary threshold later.
+After specifying `alpha = 0.05`, we need to use 5% as the target in downstream steps.
+
+```{r dtu}
+dtu <- lapply(seq_along(dex_screen), \(i){
+    stageRObj <- stageRTx(
+        pScreen = dex_screen[[i]],
+        pConfirmation = dex_conf[[i]],
+        pScreenAdjusted = TRUE,
+        tx2gene = tx2gene_dex[[i]]
+    )
+    stageRObj <- stageWiseAdjustment(stageRObj, method = "dtu", alpha = 0.05)
+    getAdjustedPValues(
+        stageRObj, order = FALSE, onlySignificantGenes = TRUE
+    ) %>%
+        as_tibble() %>%
+        dplyr::arrange(gene, transcript)
+}) %>%
+    set_names(names(dex_screen))
+```
+
+The final table with adjusted p-values summarises the information from the two-stage analysis.
+Only genes that passed the filter are included in the table, so the table already represents screened genes.
+The transcripts with values in the `transcript` column that are less than 0.05 pass the confirmation stage on a target 5% overall false discovery rates.
+This means that, in expectation, no more than 5% of the genes that pass screening will either (1) not contain any DTU, so be falsely screened genes, or (2) contain a falsely confirmed transcript.
+A falsely confirmed transcript is a transcript with an adjusted p-value less than 0.05 which does not exhibit differential usage across condition.
+The stageR procedure allows us to look at both the genes that passed the screening stage and the transcripts with adjusted p-values less than our target alpha, and understand what kind of overall error rate this procedure entails.
+This cannot be said for an arbitrary procedure of looking at standard gene adjusted p-values and transcript adjusted p-values, where the adjustment was performed independently.
+
+```{r dtu_reactable}
+dtu_reactable <- function(
+        tbl, highlight = TRUE, striped = TRUE, compact = TRUE,
+        wrap = FALSE, resizable = FALSE, searchable = TRUE,
+        style = list(fontFamily = "Calibri, sans-serif"), ...
+){
+    tbl_gene <- tbl %>%
+        dplyr::select(gene_id = geneID, adj_p = gene) %>%
+        as_tibble() %>%
+        distinct() %>%
+        left_join(
+            as_tibble(genes)[
+                ,c("gene_id", "gene_name", "gene_biotype", "seqnames")
+            ]
+        ) %>%
+        dplyr::select(gene_name, gene_id, chromosome = seqnames, gene_biotype, adj_p) %>%
+        dplyr::arrange(adj_p)
+    tbl_tx <- tbl %>%
+        left_join(
+            as_tibble(transcripts)[,c("tx_id", "tx_biotype")],
+            by = c("txID" = "tx_id")
+        )
+    reactable(
+        tbl_gene,
+        defaultColDef = colDef(
+            align = "left",
+            minWidth = 80
+        ),
+        columns = list(
+            adj_p = colDef(cell = react_format("e"))
+        ),
+        highlight = highlight, striped = striped, compact = compact,
+        wrap = wrap, resizable = resizable, searchable = searchable,
+        style = style,
+        details = \(i){
+            nested <- tbl_tx %>%
+                dplyr::filter(geneID == tbl_gene$gene_id[i]) %>%
+                dplyr::select(tx_id = txID, tx_biotype, adj_p = transcript) %>%
+                dplyr::arrange(adj_p)
+            htmltools::div(
+                style = "padding: 1rem",
+                reactable(
+                    nested,
+                    outlined = TRUE,
+                    defaultColDef = colDef(
+                        align = "left",
+                        minWidth = 80
+                    ),
+                    columns = list(
+                        adj_p = colDef(cell = react_format("e"))
+                    ),
+                )
+            )
+        },
+        ...
+    )
+}
+```
+
+### Cycloheximide
+
+```{r dtu_CHX}
+dtu_reactable(dtu$tu_het)
+```
+
+```{r dtu_example_CHX}
+gid <- "ENSDARG00000070448"
+grps <- c("pk", "het")
+gsym <- genes$gene_name[genes$gene_id == gid]
+counts_filt %>%
+    dplyr::filter(gene_id == gid) %>%
+    column_to_rownames("feature_id") %>%
+    .[colnames(.) %in% meta$sample[meta$geno_chr14 %in% grps]] %>%
+    rownames_to_column("tx_id") %>%
+    pivot_longer(cols = !contains("tx_id"), names_to = "sample", values_to = "counts") %>%
+    left_join(meta[,c("sample", "geno_chr14")]) %>%
+    dplyr::arrange(tx_id, geno_chr14) %>%
+    group_by(sample) %>%
+    mutate(prop = counts / sum(counts)) %>%
+    group_by(tx_id, geno_chr14) %>%
+    mutate(mean = mean(prop)) %>%
+    ggplot(aes(tx_id, prop, fill = geno_chr14, group = tx_id)) +
+    geom_bar(
+        colour = "grey50", stat = "identity",
+        ## Set `reverse = TRUE` below if ordering is wrong
+        position = position_dodge2(reverse = TRUE, padding = 0)
+    ) +
+    geom_errorbar(
+        aes(tx_id, ymax = mean, ymin = mean),
+        linewidth = 0.5, linetype = "solid",
+        ## Set `reverse = TRUE` below if ordering is wrong
+        position = position_dodge2(reverse = TRUE, padding = 0.5)
+    ) +
+    scale_fill_manual(values = pal_group) +
+    labs(
+        title = "Isoform proportions of representative gene classified to have DTU transcripts",
+        subtitle = glue("*{gsym}* ({gid})"),
+        x = "Transcript ID",
+        y = "Isoform porportion",
+        fill = "Treatment"
+    )
+```
+
+## Consequences
+
+```{r isar}
+isar_counts <- lapply(dtu, \(x){
+    counts_filt %>%
+        left_join(
+            as_tibble(transcripts)[,c("tx_id", "tx_id_version")],
+            by = c("feature_id" = "tx_id")
+        ) %>%
+        column_to_rownames("tx_id_version") %>%
+        .[x$txID,] %>%
+        rownames_to_column("isoform_id") %>%
+        dplyr::select(-gene_id, -feature_id)
+})
+isar_abundance <- lapply(isar_counts, \(x){
+    txi$abundance %>%
+        .[x$isoform_id, colnames(x[-1])] %>%
+        as.data.frame() %>%
+        rownames_to_column("isoform_id")
+})
+isar_exons <- lapply(dtu, \(x){
+    exonsBy(ensDb, "tx", filter = TxIdFilter(x$txID)) %>%
+        unlist() %>%
+        as_tibble() %>%
+        left_join(as_tibble(transcripts)[,c("tx_id", "gene_id", "tx_id_version")]) %>%
+        left_join(as_tibble(genes)[,c("gene_id", "gene_name")]) %>%
+        GRanges() %>%
+        plyranges::mutate(isoform_id = tx_id_version)
+})
+## Calculations (e.g. dIF) are performed by condition_2 - condition_1 
+comparisons <- lapply(names(dtu), \(x){
+    cntrst <- contrasts[,x]
+    tribble(
+        ~condition_1, ~condition_2,
+        names(cntrst)[cntrst == -1], names(cntrst)[cntrst == 1]
+    )
+}) %>%
+    set_names(names(dtu))
+design <- meta %>%
+    dplyr::select(sampleID = sample, condition = group) %>%
+    ## ??? it wants condition as a character not a factor
+    mutate(condition = as.character(condition)) %>%
+    as.data.frame()
+```
+
+```{r switch, results='hide'}
+switch <- lapply(seq_along(dtu), \(i){
+    x <- importRdata(
+        isoformCountMatrix = isar_counts[[i]],
+        isoformRepExpression = isar_abundance[[i]],  # Need this to reliably estimate dIF
+        designMatrix = design,
+        comparisonsToMake = comparisons[[i]],
+        isoformExonAnnoation = isar_exons[[i]],
+        isoformNtFasta = "/mnt/hpcfs/a1647910/workflows/smk-ens-refs/results/homo_sapiens/release_112/gentrome.fa",
+        fixStringTieAnnotationProblem = FALSE,
+        quiet = interactive(),
+        showProgress = interactive()
+    )
+    ## Add q-values from DTU testing with DEXSeq/StageR
+    x$isoformFeatures$gene_switch_q_value <- dtu[[i]]$gene[match(
+        str_remove_all(x$isoformFeatures$gene_id, "\\.\\d+"),
+        dtu[[i]]$geneID
+    )]
+    x$isoformFeatures$isoform_switch_q_value <- dtu[[i]]$transcript[match(
+        str_remove_all(x$isoformFeatures$isoform_id, "\\.\\d+"),
+        dtu[[i]]$txID
+    )]
+    x
+}) %>%
+    set_names(names(dtu))
+```
+
+```{r switch_nmd}
+switch <- lapply(switch, \(x){
+    ## Ensembl NMD classification
+    x$isoformFeatures$nmd_ens <- nmd_ensembl$nmd_ens[match(
+        str_remove_all(x$isoformFeatures$isoform_id, "\\.\\d+"),
+        nmd_ensembl$tx_id
+    )]
+    ## NIF_finder NMD classification
+    x$isoformFeatures$nmd_nif_dej <- nmd_nif$dej[match(
+        str_remove_all(x$isoformFeatures$isoform_id, "\\.\\d+"),
+        nmd_nif$tx_id
+    )]
+    x$isoformFeatures$nmd_nif_uorf <- nmd_nif$uorf[match(
+        str_remove_all(x$isoformFeatures$isoform_id, "\\.\\d+"),
+        nmd_nif$tx_id
+    )]
+    x$isoformFeatures$nmd_nif_long3 <- nmd_nif$long3[match(
+        str_remove_all(x$isoformFeatures$isoform_id, "\\.\\d+"),
+        nmd_nif$tx_id
+    )]
+    ## ISAR NMD classification
+    x <- analyzeORF(
+        x, PTCDistance = 55,
+        quiet = interactive(), showProgress = interactive()
+    )
+    x$isoformFeatures$nmd_isar <- x$isoformFeatures$PTC
+    x
+})
+```
+
+```{r switch_nmd_choose}
+## Choose which classification to use for analysing NMD consequences
+switch <- lapply(switch, \(x){
+    x$isoformFeatures$PTC <- x$isoformFeatures$nmd_ens
+    x
+})
+```
+
+## NMD classification overlap
+
+::: {.panel-tabset}
+
+### Cycloheximide
+
+```{r nmd_overlap_CHX}
+switch$CHX$isoformFeatures %>%
+    as_tibble() %>%
+    dplyr::select(isoform_id, nmd_isar) %>%
+    dplyr::rename(tx_id_version = isoform_id) %>%
+    left_join(
+        as_tibble(transcripts)[,c("tx_id", "tx_id_version", "tx_biotype")]
+    ) %>%
+    left_join(nmd_nif) %>%
+    mutate(
+        `ISAR (PTC)` = nmd_isar,
+        `Ensembl (tx biotype)` = tx_biotype == "nonsense_mediated_decay",
+        `NIF_finder (dEJ)` = ifelse(is.na(dej), FALSE, dej)
+    ) %>%
+    ggplot() +
+    ggvenn::geom_venn(
+        aes(
+            A = `ISAR (PTC)`,
+            B = `Ensembl (tx biotype)`,
+            C = `NIF_finder (dEJ)`
+        ),
+        fill_color = brewer.pal(3, "Accent")
+    ) +
+    coord_fixed() +
+    theme_void() +
+    labs(
+        title = "NMD classification overlaps"
+    ) +
+    theme(
+        plot.title = element_markdown(),
+        plot.subtitle = element_markdown()
+    )
+```
+
+:::
+
+## Volcano plots
+
+### Cycloheximide
+
+::: {.panel-tabset}
+
+#### Ensembl
+
+```{r volc_CHX_ens}
+switch$CHX$isoformFeatures %>%
+    dplyr::select(
+        tx_id_version = isoform_id, qval = isoform_switch_q_value,
+        dIF, PTC = nmd_ens
+    ) %>%
+    dplyr::mutate(PTC = ifelse(is.na(PTC), FALSE, PTC)) %>%
+    dplyr::arrange(PTC) %>%
+    ggplot(aes(dIF, -log10(qval), fill = PTC)) +
+    geom_point(colour = "black", size = 2, shape = 21, alpha = 0.5) +
+    geom_xsidedensity(
+        aes(y = after_stat(density), fill = PTC),
+        colour = "black", alpha = 0.5, show.legend = FALSE
+    ) +
+    geom_hline(
+        yintercept = -log10(0.05), linetype = "dashed"
+    ) +
+    scale_fill_manual(values = c("TRUE" = "darkred", "FALSE" = "grey50")) +
+    labs(
+        x = "Difference in Isoform Fraction (dIF)",
+        y = "-log~10~(q value)",
+        fill = "NMD"
+    )
+```
+
+#### NIF dEJ
+
+```{r volc_CHX_dej}
+switch$CHX$isoformFeatures %>%
+    dplyr::select(
+        tx_id_version = isoform_id, qval = isoform_switch_q_value,
+        dIF, PTC = nmd_nif_dej
+    ) %>%
+    dplyr::mutate(PTC = ifelse(is.na(PTC), FALSE, PTC)) %>%
+    dplyr::arrange(PTC) %>%
+    ggplot(aes(dIF, -log10(qval), fill = PTC)) +
+    geom_point(colour = "black", size = 2, shape = 21, alpha = 0.5) +
+    geom_xsidedensity(
+        aes(y = after_stat(density), fill = PTC),
+        colour = "black", alpha = 0.5, show.legend = FALSE
+    ) +
+    geom_hline(
+        yintercept = -log10(0.05), linetype = "dashed"
+    ) +
+    scale_fill_manual(values = c("TRUE" = "darkred", "FALSE" = "grey50")) +
+    labs(
+        x = "Difference in Isoform Fraction (dIF)",
+        y = "-log~10~(q value)",
+        fill = "NMD"
+    )
+```
+
+#### NIF uORF
+
+```{r volc_CHX_uorf}
+switch$CHX$isoformFeatures %>%
+    dplyr::select(
+        tx_id_version = isoform_id, qval = isoform_switch_q_value,
+        dIF, PTC = nmd_nif_uorf
+    ) %>%
+    dplyr::mutate(PTC = ifelse(is.na(PTC), FALSE, PTC)) %>%
+    dplyr::arrange(PTC) %>%
+    ggplot(aes(dIF, -log10(qval), fill = PTC)) +
+    geom_point(colour = "black", size = 2, shape = 21, alpha = 0.5) +
+    geom_xsidedensity(
+        aes(y = after_stat(density), fill = PTC),
+        colour = "black", alpha = 0.5, show.legend = FALSE
+    ) +
+    geom_hline(
+        yintercept = -log10(0.05), linetype = "dashed"
+    ) +
+    scale_fill_manual(values = c("TRUE" = "darkred", "FALSE" = "grey50")) +
+    labs(
+        x = "Difference in Isoform Fraction (dIF)",
+        y = "-log~10~(q value)",
+        fill = "NMD"
+    )
+```
+
+#### NIF long3UTR
+
+```{r volc_CHX_long3}
+switch$CHX$isoformFeatures %>%
+    dplyr::select(
+        tx_id_version = isoform_id, qval = isoform_switch_q_value,
+        dIF, PTC = nmd_nif_long3
+    ) %>%
+    dplyr::mutate(PTC = ifelse(is.na(PTC), FALSE, PTC)) %>%
+    dplyr::arrange(PTC) %>%
+    ggplot(aes(dIF, -log10(qval), fill = PTC)) +
+    geom_point(colour = "black", size = 2, shape = 21, alpha = 0.5) +
+    geom_xsidedensity(
+        aes(y = after_stat(density), fill = PTC),
+        colour = "black", alpha = 0.5, show.legend = FALSE
+    ) +
+    geom_hline(
+        yintercept = -log10(0.05), linetype = "dashed"
+    ) +
+    scale_fill_manual(values = c("TRUE" = "darkred", "FALSE" = "grey50")) +
+    labs(
+        x = "Difference in Isoform Fraction (dIF)",
+        y = "-log~10~(q value)",
+        fill = "NMD"
+    )
+```
+
+#### ISAR
+
+```{r volc_CHX_isar}
+switch$CHX$isoformFeatures %>%
+    dplyr::select(
+        tx_id_version = isoform_id, qval = isoform_switch_q_value,
+        dIF, PTC = nmd_isar
+    ) %>%
+    dplyr::mutate(PTC = ifelse(is.na(PTC), FALSE, PTC)) %>%
+    dplyr::arrange(PTC) %>%
+    ggplot(aes(dIF, -log10(qval), fill = PTC)) +
+    geom_point(colour = "black", size = 2, shape = 21, alpha = 0.5) +
+    geom_xsidedensity(
+        aes(y = after_stat(density), fill = PTC),
+        colour = "black", alpha = 0.5, show.legend = FALSE
+    ) +
+    geom_hline(
+        yintercept = -log10(0.05), linetype = "dashed"
+    ) +
+    scale_fill_manual(values = c("TRUE" = "darkred", "FALSE" = "grey50")) +
+    labs(
+        x = "Difference in Isoform Fraction (dIF)",
+        y = "-log~10~(q value)",
+        fill = "NMD"
+    )
+```
+
+:::
+
+# Data export
+
+```{r data_export}
+saveRDS(dtu, here("Rdata/dtu_CHX.Rds"))
+saveRDS(switch, here("Rdata/switch_CHX.Rds"))
+```
+
+# Session information
+
+```{r session_info}
+sessionInfo() %>%
+    pander()
+```

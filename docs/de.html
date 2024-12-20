@@ -256,7 +256,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">LAST MODIFIED</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">04 September, 2024</p>
+      <p class="date-modified">14 November, 2024</p>
     </div>
   </div>
     
@@ -943,7 +943,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">"smk-de/results/count/stranded/all.featureCounts"</span>), <span class="at">comment =</span> <span class="st">"#"</span>) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">"smk-rnaseq-counts-1.2.0/results/count/stranded/all.featureCounts"</span>), <span class="at">comment =</span> <span class="st">"#"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(Chr, Start, End, Strand, Length)) <span class="sc">%&gt;%</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">set_colnames</span>(<span class="fu">basename</span>(<span class="fu">colnames</span>(.))) <span class="sc">%&gt;%</span></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">set_colnames</span>(<span class="fu">str_remove</span>(<span class="fu">colnames</span>(.), <span class="st">"</span><span class="sc">\\</span><span class="st">.bam"</span>)) <span class="sc">%&gt;%</span></span>
@@ -982,7 +982,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Gene-level count data was loaded from <code>featureCounts</code> and imported into <code>R</code> as a <code>DGEList</code> object.</p>
 <p>Genes with low counts across all libraries provide little evidence for differential expression. The discreteness of these counts also interferes with downstream statistical approximations. Genes were therefore retained for downstream analysis if they had 1 CPM in at least 3 samples. <!-- This meant that each remaining gene must have assigned reads detected in at least one genotype group. --> Filtering is performed independently of which sample belongs to which group so that no bias is introduced.</p>
-<p>18022 genes remained for further analysis with library sizes ranging from 25,343,210 to 68,034,592.</p>
+<p>18021 genes remained for further analysis with library sizes ranging from 25,343,859 to 68,035,941.</p>
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1291,7 +1291,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>design_psen1 <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span><span class="dv">0</span> <span class="sc">+</span> geno_psen1, <span class="at">data =</span> dge_list<span class="sc">$</span>samples) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>design_psen1 <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span><span class="dv">0</span> <span class="sc">+</span> geno_psen1 <span class="sc">+</span> geno_chr14, <span class="at">data =</span> dge_list<span class="sc">$</span>samples) <span class="sc">%&gt;%</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">set_colnames</span>(<span class="fu">str_remove</span>(<span class="fu">colnames</span>(.), <span class="st">"geno_psen1"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
@@ -1332,7 +1332,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 16%">
+<col style="width: 27%">
 <col style="width: 15%">
 <col style="width: 12%">
 <col style="width: 16%">
@@ -1363,6 +1363,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: center;">0</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">-1</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>geno_chr14pk</strong></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>geno_chr14het</strong></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
 </tr>
 </tbody>
 </table>
@@ -1446,9 +1458,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-The 3 differentially expressed genes
+The 8 differentially expressed genes
 <div class="reactable html-widget html-fill-item" id="tt_eofad_wt" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="tt_eofad_wt">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000023587","ENSDARG00000078322","ENSDARG00000093378"],"gene_name":["kcnk5a","col12a1a","si:ch211-235i11.5"],"chr":["17","17","17"],"logFC":[4.00211385800043,1.29907323225793,0.908560722019093],"logCPM":[0.781869302271064,2.80577855506173,2.65348394835153],"PValue":[2.86918434693709e-20,2.09754403174389e-09,7.30901267927682e-09],"FDR":[5.17084403005003e-16,1.89009692700442e-05,4.39076755019756e-05]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["4.00","1.30","0.91"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["0.78","2.81","2.65"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["2.87e-20","2.10e-09","7.31e-09"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["5.17e-16","1.89e-05","4.39e-05"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_eofad_wt","dataKey":"d59330f80f10815fb1bb3144b026d71e"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="tt_eofad_wt">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000023587","ENSDARG00000078322","ENSDARG00000093378","ENSDARG00000022995","ENSDARG00000103849","ENSDARG00000070126","ENSDARG00000091723","ENSDARG00000053190"],"gene_name":["kcnk5a","col12a1a","si:ch211-235i11.5","clic4","mdh1ab","si:dkey-22l11.6","si:ch211-202f3.4","galnt16"],"chr":["17","17","17","17","17","4","17","17"],"logFC":[4.00873631230008,1.29612985422872,0.907792498792563,-0.622322462160406,0.976661880418606,1.70435014832086,1.61614782696012,0.305314755823411],"logCPM":[0.781858630257042,2.80575089738365,2.65345964038009,5.58903507660021,4.44334030605553,-0.614622923767173,-0.533866476231675,5.80746138106854],"PValue":[2.56112162755182e-19,7.08598719222227e-09,2.36872915590881e-08,8.53074075477637e-06,9.29970408404834e-06,1.73181711822367e-05,1.95699393358631e-05,2.00682353654861e-05],"FDR":[4.61539728501114e-15,6.38482875955187e-05,0.000142289560395442,0.033517993459727,0.033517993459727,0.0452062086901781,0.0452062086901781,0.0452062086901781]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["4.01","1.30","0.91","-0.62","0.98","1.70","1.62","0.31"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["0.78","2.81","2.65","5.59","4.44","-0.61","-0.53","5.81"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["2.56e-19","7.09e-09","2.37e-08","8.53e-06","9.30e-06","1.73e-05","1.96e-05","2.01e-05"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["4.62e-15","6.38e-05","1.42e-04","3.35e-02","3.35e-02","4.52e-02","4.52e-02","4.52e-02"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_eofad_wt","dataKey":"ec89018f1d2a630fc5f9e8d414adeeff"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 <button onclick="Reactable.downloadDataCSV('tt_eofad_wt', 'tt_eofad_wt.csv')">
 <svg aria-hidden="true" role="img" viewbox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"></path></svg>
 Download as CSV
@@ -1466,19 +1478,22 @@ Download as CSV
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
+<col style="width: 22%">
 <col style="width: 26%">
 <col style="width: 19%">
 </colgroup>
 <thead>
 <tr class="header">
+<th style="text-align: center;">Downregulated</th>
 <th style="text-align: center;">Non-siginificant</th>
 <th style="text-align: center;">Upregulated</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: center;">18019</td>
-<td style="text-align: center;">3</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">18013</td>
+<td style="text-align: center;">7</td>
 </tr>
 </tbody>
 </table>
@@ -1521,7 +1536,7 @@ Download as CSV
 <div class="cell-output-display">
 The 2 differentially expressed genes
 <div class="reactable html-widget html-fill-item" id="tt_fai_wt" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="tt_fai_wt">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000004870","ENSDARG00000027279"],"gene_name":["psen1","numb"],"chr":["17","17"],"logFC":[-0.901848852190327,0.748723755875751],"logCPM":[5.26938418735057,5.30845703140981],"PValue":[2.93594419396211e-11,1.37059879742813e-07],"FDR":[5.29115862635851e-07,0.00123504657636249]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["-0.90","0.75"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["5.27","5.31"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["2.94e-11","1.37e-07"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["5.29e-07","1.24e-03"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_fai_wt","dataKey":"ff905b04276e4501af28c6774015192c"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="tt_fai_wt">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000004870","ENSDARG00000027279"],"gene_name":["psen1","numb"],"chr":["17","17"],"logFC":[-0.900389915006695,0.749807776393544],"logCPM":[5.26935688420139,5.30831885518398],"PValue":[9.00230242835586e-11,2.8240438283684e-07],"FDR":[1.62230492061401e-06,0.00254460469155135]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["-0.90","0.75"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["5.27","5.31"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["9.00e-11","2.82e-07"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["1.62e-06","2.54e-03"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_fai_wt","dataKey":"ff37a7c976252e0e32075930e131e8e5"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 <button onclick="Reactable.downloadDataCSV('tt_fai_wt', 'tt_fai_wt.csv')">
 <svg aria-hidden="true" role="img" viewbox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"></path></svg>
 Download as CSV
@@ -1553,7 +1568,7 @@ Download as CSV
 <tbody>
 <tr class="odd">
 <td style="text-align: center;">1</td>
-<td style="text-align: center;">18020</td>
+<td style="text-align: center;">18019</td>
 <td style="text-align: center;">1</td>
 </tr>
 </tbody>
@@ -1595,9 +1610,9 @@ Download as CSV
 <span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-The 17 differentially expressed genes
+The 18 differentially expressed genes
 <div class="reactable html-widget html-fill-item" id="tt_eofad_fai" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="tt_eofad_fai">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000023587","ENSDARG00000004870","ENSDARG00000078322","ENSDARG00000093378","ENSDARG00000027279","ENSDARG00000091723","ENSDARG00000097634","ENSDARG00000060126","ENSDARG00000103849","ENSDARG00000089717","ENSDARG00000022995","ENSDARG00000087985","ENSDARG00000053190","ENSDARG00000102333","ENSDARG00000074756","ENSDARG00000106248","ENSDARG00000040135"],"gene_name":["kcnk5a","psen1","col12a1a","si:ch211-235i11.5","numb","si:ch211-202f3.4","CU306817.1","acyp1","mdh1ab","qpct","clic4","znf365","galnt16","fcf1","tfb2m","LRFN2","fosaa"],"chr":["17","17","17","17","17","17","17","17","17","17","17","17","17","17","17","17","17"],"logFC":[4.16566844728548,1.00817151212925,1.16790566555161,0.868967453573774,-0.826434030107234,2.41488815361311,2.84526726089288,0.750029525166203,1.14545774502341,0.891343907201004,-0.68294810161572,-0.992668720572927,0.303673932603883,0.510642362019676,0.438726788937298,-0.39275135544404,-0.698034891624698],"logCPM":[0.781869302271064,5.26938418735057,2.80577855506173,2.65348394835153,5.30845703140981,-0.533856342804774,-0.854270113356284,4.91840622407275,4.44337062195821,4.29557931987477,5.58906249214201,2.68487502428865,5.80748675375514,4.43028701112751,4.67367618295008,5.3565363952013,3.83919195581521],"PValue":[8.57017243426532e-21,2.13566829007001e-12,1.19750739641583e-08,1.38973882120093e-08,2.31114827270561e-08,1.21017145933409e-07,1.61658902937562e-07,1.47593826008719e-06,2.83813112694646e-06,3.09046730862567e-06,3.90921729131488e-06,4.4358969024381e-06,1.29973178477023e-05,1.77475540784437e-05,2.20916047685613e-05,2.77362045675047e-05,4.4760048307581e-05],"FDR":[1.5445164761033e-16,1.92445069618209e-08,6.26146825892078e-05,6.26146825892078e-05,8.33030283414008e-05,0.000363495167335315,0.000416202392677249,0.00332491991541142,0.00556964018360519,0.00556964018360519,0.00640471945673425,0.00666197783131162,0.0180182817116378,0.0228461728286938,0.0265423267426008,0.0312413674197231,0.0474509170940721]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["4.17","1.01","1.17","0.87","-0.83","2.41","2.85","0.75","1.15","0.89","-0.68","-0.99","0.30","0.51","0.44","-0.39","-0.70"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["0.78","5.27","2.81","2.65","5.31","-0.53","-0.85","4.92","4.44","4.30","5.59","2.68","5.81","4.43","4.67","5.36","3.84"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["8.57e-21","2.14e-12","1.20e-08","1.39e-08","2.31e-08","1.21e-07","1.62e-07","1.48e-06","2.84e-06","3.09e-06","3.91e-06","4.44e-06","1.30e-05","1.77e-05","2.21e-05","2.77e-05","4.48e-05"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["1.54e-16","1.92e-08","6.26e-05","6.26e-05","8.33e-05","3.63e-04","4.16e-04","3.32e-03","5.57e-03","5.57e-03","6.40e-03","6.66e-03","1.80e-02","2.28e-02","2.65e-02","3.12e-02","4.75e-02"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_eofad_fai","dataKey":"e084c132fffb15696296343632cfee8d"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="tt_eofad_fai">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000023587","ENSDARG00000004870","ENSDARG00000078322","ENSDARG00000093378","ENSDARG00000027279","ENSDARG00000091723","ENSDARG00000097634","ENSDARG00000060126","ENSDARG00000103849","ENSDARG00000022995","ENSDARG00000089717","ENSDARG00000087985","ENSDARG00000102333","ENSDARG00000053190","ENSDARG00000074756","ENSDARG00000106248","ENSDARG00000071347","ENSDARG00000097902"],"gene_name":["kcnk5a","psen1","col12a1a","si:ch211-235i11.5","numb","si:ch211-202f3.4","CU306817.1","acyp1","mdh1ab","clic4","qpct","znf365","fcf1","galnt16","tfb2m","LRFN2","aftphb","si:ch73-204p21.2"],"chr":["17","17","17","17","17","17","17","17","17","17","17","17","17","17","17","17","17","17"],"logFC":[4.15891689133939,1.00410097118744,1.16859862207032,0.867913824402795,-0.827971509072366,2.3883928374555,2.84628856254452,0.76994639807458,1.17732712016076,-0.675630411842661,0.901743748692789,-0.988355051677157,0.518383683346888,0.30432206985562,0.437313809355692,-0.393424913049597,-0.478315198814702,0.941719909050299],"logCPM":[0.781858630257042,5.26935688420139,2.80575089738365,2.65345964038009,5.30831885518398,-0.533866476231675,-0.854286830287559,4.91838127525246,4.44334030605553,5.58903507660021,4.29555331143289,2.68484776801763,4.4302611509841,5.80746138106854,4.67365263246475,5.35648736493197,3.40943201214026,0.298148730866835],"PValue":[8.7363246318527e-20,8.17431998433244e-12,3.46563098093941e-08,4.31342552345145e-08,5.17950199828864e-08,1.6101072517297e-07,2.96946738819891e-07,4.05642205020732e-07,5.48367683277318e-07,2.39045993833021e-06,4.39740513700201e-06,9.4945037778163e-06,1.52095470119011e-05,2.06824262444734e-05,2.99065673608882e-05,3.63297478738909e-05,3.85617917245956e-05,4.51203186708786e-05],"FDR":[1.57437306190617e-15,7.36547102188274e-08,0.000186679611022319,0.000186679611022319,0.000186679611022319,0.000483595713057017,0.000764468168610466,0.000913759772084826,0.00109801489114895,0.00430784785486488,0.00720414890671938,0.0142583710483356,0.0210839420539592,0.0266227145251183,0.035929750027371,0.040877767568761,0.040877767568761,0.0451729590426613]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["4.16","1.00","1.17","0.87","-0.83","2.39","2.85","0.77","1.18","-0.68","0.90","-0.99","0.52","0.30","0.44","-0.39","-0.48","0.94"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["0.78","5.27","2.81","2.65","5.31","-0.53","-0.85","4.92","4.44","5.59","4.30","2.68","4.43","5.81","4.67","5.36","3.41","0.30"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["8.74e-20","8.17e-12","3.47e-08","4.31e-08","5.18e-08","1.61e-07","2.97e-07","4.06e-07","5.48e-07","2.39e-06","4.40e-06","9.49e-06","1.52e-05","2.07e-05","2.99e-05","3.63e-05","3.86e-05","4.51e-05"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["1.57e-15","7.37e-08","1.87e-04","1.87e-04","1.87e-04","4.84e-04","7.64e-04","9.14e-04","1.10e-03","4.31e-03","7.20e-03","1.43e-02","2.11e-02","2.66e-02","3.59e-02","4.09e-02","4.09e-02","4.52e-02"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_eofad_fai","dataKey":"90401fe6611351e277ffc669996f02db"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 <button onclick="Reactable.downloadDataCSV('tt_eofad_fai', 'tt_eofad_fai.csv')">
 <svg aria-hidden="true" role="img" viewbox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"></path></svg>
 Download as CSV
@@ -1629,8 +1644,8 @@ Download as CSV
 <tbody>
 <tr class="odd">
 <td style="text-align: center;">5</td>
-<td style="text-align: center;">18005</td>
-<td style="text-align: center;">12</td>
+<td style="text-align: center;">18003</td>
+<td style="text-align: center;">13</td>
 </tr>
 </tbody>
 </table>
@@ -1929,7 +1944,7 @@ Download as CSV
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>design_chr14 <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span><span class="dv">0</span> <span class="sc">+</span> geno_chr14, <span class="at">data =</span> dge_list<span class="sc">$</span>samples) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>design_chr14 <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span><span class="dv">0</span> <span class="sc">+</span> geno_chr14 <span class="sc">+</span> geno_psen1, <span class="at">data =</span> dge_list<span class="sc">$</span>samples) <span class="sc">%&gt;%</span></span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">set_colnames</span>(<span class="fu">str_remove</span>(<span class="fu">colnames</span>(.), <span class="st">"geno_chr14"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
@@ -1970,7 +1985,7 @@ Download as CSV
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 13%">
+<col style="width: 30%">
 <col style="width: 11%">
 <col style="width: 12%">
 <col style="width: 12%">
@@ -2001,6 +2016,18 @@ Download as CSV
 <td style="text-align: center;">0</td>
 <td style="text-align: center;">-1</td>
 <td style="text-align: center;">-1</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>geno_psen1eofad</strong></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>geno_psen1fai</strong></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
 </tr>
 </tbody>
 </table>
@@ -2088,7 +2115,7 @@ Download as CSV
 <div class="cell-output-display">
 The 7 differentially expressed genes
 <div class="reactable html-widget html-fill-item" id="tt_pk_tu" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="tt_pk_tu">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000100547","ENSDARG00000079591","ENSDARG00000100646","ENSDARG00000067545","ENSDARG00000092493","ENSDARG00000071671","ENSDARG00000021374"],"gene_name":["CR383680.1","si:ch211-203d1.3","BX005454.1","adam19b","si:dkeyp-44a8.2","nudt22","cab39l1"],"chr":["14","14","14","14","14","14","14"],"logFC":[-5.53992156288246,-1.16359661904187,1.59446112758735,-0.820394084345795,-0.608952876561801,1.10081664602264,-0.583731859873755],"logCPM":[1.50459232655914,4.26988258398523,2.10769956359855,4.42434899491887,7.08820745756357,2.03258628390902,4.41496712703575],"PValue":[8.76555228151971e-22,5.69293374166092e-09,1.38340734621085e-08,2.2745010262855e-07,6.81116526646399e-07,9.12145573380507e-07,9.46941418683209e-07],"FDR":[1.57972783217548e-17,5.12990259461066e-05,8.31058906447067e-05,0.00102477643739293,0.00243796832107268,0.00243796832107268,0.00243796832107268]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["-5.54","-1.16","1.59","-0.82","-0.61","1.10","-0.58"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["1.50","4.27","2.11","4.42","7.09","2.03","4.41"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["8.77e-22","5.69e-09","1.38e-08","2.27e-07","6.81e-07","9.12e-07","9.47e-07"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["1.58e-17","5.13e-05","8.31e-05","1.02e-03","2.44e-03","2.44e-03","2.44e-03"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_pk_tu","dataKey":"bd2fb9eb276a40cd30e014601bb1f594"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="tt_pk_tu">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000100547","ENSDARG00000079591","ENSDARG00000100646","ENSDARG00000067545","ENSDARG00000021374","ENSDARG00000092493","ENSDARG00000071671"],"gene_name":["CR383680.1","si:ch211-203d1.3","BX005454.1","adam19b","cab39l1","si:dkeyp-44a8.2","nudt22"],"chr":["14","14","14","14","14","14","14"],"logFC":[-5.55000261765286,-1.16485934371143,1.59685855802216,-0.819791961919179,-0.587102060295266,-0.608752624132659,1.09415662086094],"logCPM":[1.50654273695574,4.26986347788642,2.10766326685536,4.42431719430366,4.41494098908154,7.08826942293785,2.03256705189083],"PValue":[4.6897266333341e-21,1.35608950980406e-08,2.55018771644743e-08,4.10398148197538e-07,1.48935864201142e-06,1.56213840885594e-06,1.84115403667432e-06],"FDR":[8.45135636593137e-17,0.000122190445280895,0.000153189776126997,0.00184894625716696,0.00469188271099882,0.00469188271099882,0.00473991955641541]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["-5.55","-1.16","1.60","-0.82","-0.59","-0.61","1.09"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["1.51","4.27","2.11","4.42","4.41","7.09","2.03"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["4.69e-21","1.36e-08","2.55e-08","4.10e-07","1.49e-06","1.56e-06","1.84e-06"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["8.45e-17","1.22e-04","1.53e-04","1.85e-03","4.69e-03","4.69e-03","4.74e-03"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_pk_tu","dataKey":"95ffee6746847ac3442cd5c29c616634"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 <button onclick="Reactable.downloadDataCSV('tt_pk_tu', 'tt_pk_tu.csv')">
 <svg aria-hidden="true" role="img" viewbox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"></path></svg>
 Download as CSV
@@ -2120,7 +2147,7 @@ Download as CSV
 <tbody>
 <tr class="odd">
 <td style="text-align: center;">5</td>
-<td style="text-align: center;">18015</td>
+<td style="text-align: center;">18014</td>
 <td style="text-align: center;">2</td>
 </tr>
 </tbody>
@@ -2162,9 +2189,9 @@ Download as CSV
 <span id="cb51-28"><a href="#cb51-28" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-The 3 differentially expressed genes
+The 1 differentially expressed genes
 <div class="reactable html-widget html-fill-item" id="tt_pk_het" style="width:auto;height:auto;"></div>
-<script type="application/json" data-for="tt_pk_het">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000100547","ENSDARG00000071871","ENSDARG00000061854"],"gene_name":["CR383680.1","glod5","lman2"],"chr":["14","14","14"],"logFC":[-5.46275998619523,1.2936268167945,0.490975943032869],"logCPM":[1.50459232655914,0.594242279725177,5.68901829507487],"PValue":[1.49834820925894e-21,4.98818519114589e-06,6.28663902954872e-06],"FDR":[2.70032314272646e-17,0.0377659361968423,0.0377659361968423]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["-5.46","1.29","0.49"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["1.50","0.59","5.69"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["1.50e-21","4.99e-06","6.29e-06"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["2.70e-17","3.78e-02","3.78e-02"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_pk_het","dataKey":"a7eff872af245170605f089ac3a0ec28"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="tt_pk_het">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"gene_id":["ENSDARG00000100547"],"gene_name":["CR383680.1"],"chr":["14"],"logFC":[-5.46839618220335],"logCPM":[1.50654273695574],"PValue":[8.33024640737747e-21],"FDR":[1.50119370507349e-16]},"columns":[{"id":"gene_id","name":"gene_id","type":"character","minWidth":80,"align":"left"},{"id":"gene_name","name":"gene_name","type":"character","minWidth":80,"align":"left"},{"id":"chr","name":"chr","type":"factor","minWidth":80,"align":"left"},{"id":"logFC","name":"logFC","type":"numeric","minWidth":80,"align":"left","cell":["-5.47"]},{"id":"logCPM","name":"logCPM","type":"numeric","minWidth":80,"align":"left","cell":["1.51"]},{"id":"PValue","name":"PValue","type":"numeric","minWidth":80,"align":"left","cell":["8.33e-21"]},{"id":"FDR","name":"FDR","type":"numeric","minWidth":80,"align":"left","cell":["1.50e-16"]}],"resizable":true,"searchable":true,"highlight":true,"striped":true,"compact":true,"nowrap":true,"style":{"fontFamily":"Calibri, sans-serif"},"elementId":"tt_pk_het","dataKey":"a30b8c56af871639a93fb2da24557d3e"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 <button onclick="Reactable.downloadDataCSV('tt_pk_het', 'tt_pk_het.csv')">
 <svg aria-hidden="true" role="img" viewbox="0 0 512 512" style="height:1em;width:1em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"></path></svg>
 Download as CSV
@@ -2184,20 +2211,17 @@ Download as CSV
 <colgroup>
 <col style="width: 22%">
 <col style="width: 26%">
-<col style="width: 19%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: center;">Downregulated</th>
 <th style="text-align: center;">Non-siginificant</th>
-<th style="text-align: center;">Upregulated</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td style="text-align: center;">1</td>
-<td style="text-align: center;">18019</td>
-<td style="text-align: center;">2</td>
+<td style="text-align: center;">18020</td>
 </tr>
 </tbody>
 </table>
@@ -2267,7 +2291,7 @@ Download as CSV
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: center;">18022</td>
+<td style="text-align: center;">18021</td>
 </tr>
 </tbody>
 </table>
@@ -2564,12 +2588,12 @@ Download as CSV
 <span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pander</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><strong>R version 4.4.1 (2024-06-14)</strong></p>
+<p><strong>R version 4.4.2 (2024-10-31)</strong></p>
 <p><strong>Platform:</strong> x86_64-pc-linux-gnu</p>
 <p><strong>locale:</strong> <em>LC_CTYPE=en_AU.UTF-8</em>, <em>LC_NUMERIC=C</em>, <em>LC_TIME=en_AU.UTF-8</em>, <em>LC_COLLATE=en_AU.UTF-8</em>, <em>LC_MONETARY=en_AU.UTF-8</em>, <em>LC_MESSAGES=en_AU.UTF-8</em>, <em>LC_PAPER=en_AU.UTF-8</em>, <em>LC_NAME=C</em>, <em>LC_ADDRESS=C</em>, <em>LC_TELEPHONE=C</em>, <em>LC_MEASUREMENT=en_AU.UTF-8</em> and <em>LC_IDENTIFICATION=C</em></p>
 <p><strong>attached base packages:</strong> <em>stats4</em>, <em>splines</em>, <em>stats</em>, <em>graphics</em>, <em>grDevices</em>, <em>utils</em>, <em>datasets</em>, <em>methods</em> and <em>base</em></p>
-<p><strong>other attached packages:</strong> <em>ensembldb(v.2.28.0)</em>, <em>AnnotationFilter(v.1.28.0)</em>, <em>GenomicFeatures(v.1.56.0)</em>, <em>AnnotationDbi(v.1.66.0)</em>, <em>Biobase(v.2.64.0)</em>, <em>GenomicRanges(v.1.56.1)</em>, <em>GenomeInfoDb(v.1.40.1)</em>, <em>IRanges(v.2.38.1)</em>, <em>S4Vectors(v.0.42.1)</em>, <em>corrplot(v.0.94)</em>, <em>pheatmap(v.1.0.12)</em>, <em>cqn(v.1.50.0)</em>, <em>quantreg(v.5.98)</em>, <em>SparseM(v.1.84-2)</em>, <em>preprocessCore(v.1.66.0)</em>, <em>nor1mix(v.1.3-3)</em>, <em>mclust(v.6.1.1)</em>, <em>edgeR(v.4.2.1)</em>, <em>limma(v.3.60.4)</em>, <em>htmltools(v.0.5.8.1)</em>, <em>reactable(v.0.4.4)</em>, <em>DT(v.0.33)</em>, <em>pander(v.0.6.5)</em>, <em>glue(v.1.7.0)</em>, <em>ggtext(v.0.1.2)</em>, <em>ggrepel(v.0.9.5)</em>, <em>AnnotationHub(v.3.12.0)</em>, <em>BiocFileCache(v.2.12.0)</em>, <em>dbplyr(v.2.5.0)</em>, <em>BiocGenerics(v.0.50.0)</em>, <em>scales(v.1.3.0)</em>, <em>ggpubr(v.0.6.0)</em>, <em>RColorBrewer(v.1.1-3)</em>, <em>kableExtra(v.1.4.0)</em>, <em>here(v.1.0.1)</em>, <em>magrittr(v.2.0.3)</em>, <em>lubridate(v.1.9.3)</em>, <em>forcats(v.1.0.0)</em>, <em>stringr(v.1.5.1)</em>, <em>dplyr(v.1.1.4)</em>, <em>purrr(v.1.0.2)</em>, <em>readr(v.2.1.5)</em>, <em>tidyr(v.1.3.1)</em>, <em>tibble(v.3.2.1)</em>, <em>ggplot2(v.3.5.1)</em> and <em>tidyverse(v.2.0.0)</em></p>
-<p><strong>loaded via a namespace (and not attached):</strong> <em>BiocIO(v.1.14.0)</em>, <em>bitops(v.1.0-8)</em>, <em>filelock(v.1.0.3)</em>, <em>XML(v.3.99-0.17)</em>, <em>lifecycle(v.1.0.4)</em>, <em>rstatix(v.0.7.2)</em>, <em>rprojroot(v.2.0.4)</em>, <em>lattice(v.0.22-6)</em>, <em>vroom(v.1.6.5)</em>, <em>MASS(v.7.3-61)</em>, <em>crosstalk(v.1.2.1)</em>, <em>backports(v.1.5.0)</em>, <em>rmarkdown(v.2.28)</em>, <em>yaml(v.2.3.10)</em>, <em>cowplot(v.1.1.3)</em>, <em>DBI(v.1.2.3)</em>, <em>abind(v.1.4-5)</em>, <em>zlibbioc(v.1.50.0)</em>, <em>RCurl(v.1.98-1.16)</em>, <em>rappdirs(v.0.3.3)</em>, <em>GenomeInfoDbData(v.1.2.12)</em>, <em>MatrixModels(v.0.5-3)</em>, <em>svglite(v.2.1.3)</em>, <em>commonmark(v.1.9.1)</em>, <em>codetools(v.0.2-20)</em>, <em>DelayedArray(v.0.30.1)</em>, <em>xml2(v.1.3.6)</em>, <em>tidyselect(v.1.2.1)</em>, <em>UCSC.utils(v.1.0.0)</em>, <em>farver(v.2.1.2)</em>, <em>matrixStats(v.1.3.0)</em>, <em>GenomicAlignments(v.1.40.0)</em>, <em>jsonlite(v.1.8.8)</em>, <em>survival(v.3.7-0)</em>, <em>systemfonts(v.1.1.0)</em>, <em>tools(v.4.4.1)</em>, <em>Rcpp(v.1.0.13)</em>, <em>gridExtra(v.2.3)</em>, <em>SparseArray(v.1.4.8)</em>, <em>xfun(v.0.47)</em>, <em>mgcv(v.1.9-1)</em>, <em>MatrixGenerics(v.1.16.0)</em>, <em>withr(v.3.0.1)</em>, <em>BiocManager(v.1.30.24)</em>, <em>fastmap(v.1.2.0)</em>, <em>fansi(v.1.0.6)</em>, <em>digest(v.0.6.37)</em>, <em>timechange(v.0.3.0)</em>, <em>R6(v.2.5.1)</em>, <em>mime(v.0.12)</em>, <em>colorspace(v.2.1-1)</em>, <em>markdown(v.1.13)</em>, <em>RSQLite(v.2.3.7)</em>, <em>utf8(v.1.2.4)</em>, <em>generics(v.0.1.3)</em>, <em>rtracklayer(v.1.64.0)</em>, <em>httr(v.1.4.7)</em>, <em>htmlwidgets(v.1.6.4)</em>, <em>S4Arrays(v.1.4.1)</em>, <em>pkgconfig(v.2.0.3)</em>, <em>gtable(v.0.3.5)</em>, <em>blob(v.1.2.4)</em>, <em>XVector(v.0.44.0)</em>, <em>carData(v.3.0-5)</em>, <em>ProtGenerics(v.1.36.0)</em>, <em>png(v.0.1-8)</em>, <em>knitr(v.1.48)</em>, <em>rstudioapi(v.0.16.0)</em>, <em>tzdb(v.0.4.0)</em>, <em>rjson(v.0.2.22)</em>, <em>nlme(v.3.1-166)</em>, <em>curl(v.5.2.1)</em>, <em>cachem(v.1.1.0)</em>, <em>BiocVersion(v.3.19.1)</em>, <em>parallel(v.4.4.1)</em>, <em>restfulr(v.0.0.15)</em>, <em>pillar(v.1.9.0)</em>, <em>grid(v.4.4.1)</em>, <em>vctrs(v.0.6.5)</em>, <em>car(v.3.1-2)</em>, <em>evaluate(v.0.24.0)</em>, <em>cli(v.3.6.3)</em>, <em>locfit(v.1.5-9.10)</em>, <em>compiler(v.4.4.1)</em>, <em>Rsamtools(v.2.20.0)</em>, <em>rlang(v.1.1.4)</em>, <em>crayon(v.1.5.3)</em>, <em>ggsignif(v.0.6.4)</em>, <em>labeling(v.0.4.3)</em>, <em>reactR(v.0.6.0)</em>, <em>stringi(v.1.8.4)</em>, <em>viridisLite(v.0.4.2)</em>, <em>BiocParallel(v.1.38.0)</em>, <em>munsell(v.0.5.1)</em>, <em>Biostrings(v.2.72.1)</em>, <em>lazyeval(v.0.2.2)</em>, <em>Matrix(v.1.7-0)</em>, <em>hms(v.1.1.3)</em>, <em>bit64(v.4.0.5)</em>, <em>KEGGREST(v.1.44.1)</em>, <em>statmod(v.1.5.0)</em>, <em>SummarizedExperiment(v.1.34.0)</em>, <em>highr(v.0.11)</em>, <em>fontawesome(v.0.5.2)</em>, <em>gridtext(v.0.1.5)</em>, <em>broom(v.1.0.6)</em>, <em>memoise(v.2.0.1)</em> and <em>bit(v.4.0.5)</em></p>
+<p><strong>other attached packages:</strong> <em>ensembldb(v.2.28.0)</em>, <em>AnnotationFilter(v.1.28.0)</em>, <em>GenomicFeatures(v.1.56.0)</em>, <em>AnnotationDbi(v.1.66.0)</em>, <em>Biobase(v.2.64.0)</em>, <em>GenomicRanges(v.1.56.1)</em>, <em>GenomeInfoDb(v.1.40.1)</em>, <em>IRanges(v.2.38.1)</em>, <em>S4Vectors(v.0.42.1)</em>, <em>corrplot(v.0.94)</em>, <em>pheatmap(v.1.0.12)</em>, <em>cqn(v.1.50.0)</em>, <em>quantreg(v.5.98)</em>, <em>SparseM(v.1.84-2)</em>, <em>preprocessCore(v.1.66.0)</em>, <em>nor1mix(v.1.3-3)</em>, <em>mclust(v.6.1.1)</em>, <em>edgeR(v.4.2.1)</em>, <em>limma(v.3.60.4)</em>, <em>htmltools(v.0.5.8.1)</em>, <em>reactable(v.0.4.4)</em>, <em>DT(v.0.33)</em>, <em>pander(v.0.6.5)</em>, <em>glue(v.1.8.0)</em>, <em>ggtext(v.0.1.2)</em>, <em>ggrepel(v.0.9.5)</em>, <em>AnnotationHub(v.3.12.0)</em>, <em>BiocFileCache(v.2.12.0)</em>, <em>dbplyr(v.2.5.0)</em>, <em>BiocGenerics(v.0.50.0)</em>, <em>scales(v.1.3.0)</em>, <em>ggpubr(v.0.6.0)</em>, <em>RColorBrewer(v.1.1-3)</em>, <em>kableExtra(v.1.4.0)</em>, <em>here(v.1.0.1)</em>, <em>magrittr(v.2.0.3)</em>, <em>lubridate(v.1.9.3)</em>, <em>forcats(v.1.0.0)</em>, <em>stringr(v.1.5.1)</em>, <em>dplyr(v.1.1.4)</em>, <em>purrr(v.1.0.2)</em>, <em>readr(v.2.1.5)</em>, <em>tidyr(v.1.3.1)</em>, <em>tibble(v.3.2.1)</em>, <em>ggplot2(v.3.5.1)</em> and <em>tidyverse(v.2.0.0)</em></p>
+<p><strong>loaded via a namespace (and not attached):</strong> <em>BiocIO(v.1.14.0)</em>, <em>bitops(v.1.0-8)</em>, <em>filelock(v.1.0.3)</em>, <em>XML(v.3.99-0.17)</em>, <em>lifecycle(v.1.0.4)</em>, <em>rstatix(v.0.7.2)</em>, <em>rprojroot(v.2.0.4)</em>, <em>lattice(v.0.22-6)</em>, <em>vroom(v.1.6.5)</em>, <em>MASS(v.7.3-61)</em>, <em>crosstalk(v.1.2.1)</em>, <em>backports(v.1.5.0)</em>, <em>rmarkdown(v.2.28)</em>, <em>yaml(v.2.3.10)</em>, <em>cowplot(v.1.1.3)</em>, <em>DBI(v.1.2.3)</em>, <em>abind(v.1.4-5)</em>, <em>zlibbioc(v.1.50.0)</em>, <em>RCurl(v.1.98-1.16)</em>, <em>rappdirs(v.0.3.3)</em>, <em>GenomeInfoDbData(v.1.2.12)</em>, <em>MatrixModels(v.0.5-3)</em>, <em>svglite(v.2.1.3)</em>, <em>commonmark(v.1.9.1)</em>, <em>codetools(v.0.2-20)</em>, <em>DelayedArray(v.0.30.1)</em>, <em>xml2(v.1.3.6)</em>, <em>tidyselect(v.1.2.1)</em>, <em>UCSC.utils(v.1.0.0)</em>, <em>farver(v.2.1.2)</em>, <em>matrixStats(v.1.3.0)</em>, <em>GenomicAlignments(v.1.40.0)</em>, <em>jsonlite(v.1.8.8)</em>, <em>survival(v.3.7-0)</em>, <em>systemfonts(v.1.1.0)</em>, <em>tools(v.4.4.2)</em>, <em>Rcpp(v.1.0.13)</em>, <em>gridExtra(v.2.3)</em>, <em>SparseArray(v.1.4.8)</em>, <em>xfun(v.0.47)</em>, <em>mgcv(v.1.9-1)</em>, <em>MatrixGenerics(v.1.16.0)</em>, <em>withr(v.3.0.2)</em>, <em>BiocManager(v.1.30.24)</em>, <em>fastmap(v.1.2.0)</em>, <em>fansi(v.1.0.6)</em>, <em>digest(v.0.6.37)</em>, <em>timechange(v.0.3.0)</em>, <em>R6(v.2.5.1)</em>, <em>mime(v.0.12)</em>, <em>colorspace(v.2.1-1)</em>, <em>markdown(v.1.13)</em>, <em>RSQLite(v.2.3.7)</em>, <em>utf8(v.1.2.4)</em>, <em>generics(v.0.1.3)</em>, <em>rtracklayer(v.1.64.0)</em>, <em>httr(v.1.4.7)</em>, <em>htmlwidgets(v.1.6.4)</em>, <em>S4Arrays(v.1.4.1)</em>, <em>pkgconfig(v.2.0.3)</em>, <em>gtable(v.0.3.5)</em>, <em>blob(v.1.2.4)</em>, <em>XVector(v.0.44.0)</em>, <em>carData(v.3.0-5)</em>, <em>ProtGenerics(v.1.36.0)</em>, <em>png(v.0.1-8)</em>, <em>knitr(v.1.48)</em>, <em>rstudioapi(v.0.16.0)</em>, <em>tzdb(v.0.4.0)</em>, <em>rjson(v.0.2.22)</em>, <em>nlme(v.3.1-166)</em>, <em>curl(v.5.2.1)</em>, <em>cachem(v.1.1.0)</em>, <em>BiocVersion(v.3.19.1)</em>, <em>parallel(v.4.4.2)</em>, <em>restfulr(v.0.0.15)</em>, <em>pillar(v.1.9.0)</em>, <em>grid(v.4.4.2)</em>, <em>vctrs(v.0.6.5)</em>, <em>car(v.3.1-2)</em>, <em>evaluate(v.0.24.0)</em>, <em>cli(v.3.6.3)</em>, <em>locfit(v.1.5-9.10)</em>, <em>compiler(v.4.4.2)</em>, <em>Rsamtools(v.2.20.0)</em>, <em>rlang(v.1.1.4)</em>, <em>crayon(v.1.5.3)</em>, <em>ggsignif(v.0.6.4)</em>, <em>labeling(v.0.4.3)</em>, <em>reactR(v.0.6.0)</em>, <em>stringi(v.1.8.4)</em>, <em>viridisLite(v.0.4.2)</em>, <em>BiocParallel(v.1.38.0)</em>, <em>munsell(v.0.5.1)</em>, <em>Biostrings(v.2.72.1)</em>, <em>lazyeval(v.0.2.2)</em>, <em>Matrix(v.1.7-0)</em>, <em>hms(v.1.1.3)</em>, <em>bit64(v.4.5.2)</em>, <em>KEGGREST(v.1.44.1)</em>, <em>statmod(v.1.5.0)</em>, <em>SummarizedExperiment(v.1.34.0)</em>, <em>highr(v.0.11)</em>, <em>fontawesome(v.0.5.2)</em>, <em>gridtext(v.0.1.5)</em>, <em>broom(v.1.0.6)</em>, <em>memoise(v.2.0.1)</em> and <em>bit(v.4.5.0)</em></p>
 </div>
 </div>
 

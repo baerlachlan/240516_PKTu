@@ -151,6 +151,7 @@ ah <- AnnotationHub() %>%
     subset(rdataclass == "EnsDb")
 ahId <- ah$ah_id[str_detect(ah$title, ens_release)]
 ensDb <- ah[[ahId]]
+```
 
 ```{r primary_chrs}
 primary_chrs <- c(as.character(1:25), "MT")

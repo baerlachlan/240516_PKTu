@@ -152,7 +152,7 @@ pal_group <- c(
     "wt_tu" = pal1[7], "wt_pk" = pal1[8], "wt_het" = pal1[10],
     "eofad" = pal2[1], "fai" = pal2[2], "wt" = pal2[3],
     "pk" = pal2[4], "tu" = pal2[5], "het" = pal2[6]
-) 
+)
 ```
 
 # Annotations
@@ -252,7 +252,53 @@ contrasts <- makeContrasts(
 #     tadar::countsToProps()
 # dar_1e4 <- dar(props, contrasts = contrasts, region_fixed = 1e4)
 # saveRDS(dar_1e4, here("Rdata/dar_1e4.Rds"))
-dar_1e4 <- readRDS(here("Rdata/dar_1e4.Rds"))
+# dar_1e4 <- readRDS(here("Rdata/dar_1e4.Rds"))
+```
+
+```{r}
+# gts <- tadar::readGenotypes(vcf, genome = genome(genes)) %>%
+#     subsetByOverlaps(as(seqinfo(genes), "GRanges")) %>%
+#     keepStandardChromosomes(pruning.mode = "coarse")
+# saveRDS(gts, here("Rdata/tmp/gts.Rds"))
+gts <- readRDS(here("Rdata/tmp/gts.Rds"))
+```
+
+```{r}
+## Calculated DAR group-by-group because R was crashing
+# grp <- groups[c("pk", "het")]
+# cnt <- makeContrasts(
+#     # eofad_wt = eofad - wt,
+#     # fai_wt = fai - wt,
+#     # eofad_fai = eofad - fai,
+#     # pk_tu = pk - tu,
+#     # tu_het = tu - het,
+#     pk_het = pk - het,
+#     levels = names(grp)
+# )
+# name <- colnames(cnt)
+# props <- gts %>%
+#     tadar::countAlleles(groups = grp) %>%
+#     tadar::filterLoci(n_called == 18) %>%
+#     tadar::countsToProps()
+# dar_1e6 <- dar(props, contrasts = cnt, region_fixed = 1e6)
+# saveRDS(dar_1e6, here(paste0("Rdata/tmp/dar_1e6_", name, ".Rds")))
+
+# dar <- readRDS(here("Rdata/tmp/dar_1e6_eofad_wt.Rds"))
+# dar$fai_wt <- readRDS(here("Rdata/tmp/dar_1e6_fai_wt.Rds"))$fai_wt
+# dar$eofad_fai <- readRDS(here("Rdata/tmp/dar_1e6_eofad_fai.Rds"))$eofad_fai
+# dar$pk_tu <- readRDS(here("Rdata/tmp/dar_1e6_pk_tu.Rds"))$pk_tu
+# dar$tu_het <- readRDS(here("Rdata/tmp/dar_1e6_tu_het.Rds"))$tu_het
+# dar$pk_het <- readRDS(here("Rdata/tmp/dar_1e6_pk_het.Rds"))$pk_het
+# saveRDS(dar, here("Rdata/dar_1e6.Rds"))
+
+dar_1e6 <- readRDS(here("Rdata/dar_1e6.Rds"))
+```
+
+```{r}
+# gene_dar <- flipRanges(dar) %>%
+#     assignFeatureDar(genes, dar_val = "region", fill_missing = 0)
+# saveRDS(gene_dar, here("Rdata/gene_dar_1e6.Rds"))
+gene_dar <- readRDS(here("Rdata/gene_dar_1e6.Rds"))
 ```
 
 ## ECDF
