@@ -250,9 +250,9 @@ contrasts <- makeContrasts(
 #     tadar::countAlleles(groups = groups) %>%
 #     tadar::filterLoci(n_called == 18) %>%
 #     tadar::countsToProps()
-# dar_1e4 <- dar(props, contrasts = contrasts, region_fixed = 1e4)
-# saveRDS(dar_1e4, here("Rdata/dar_1e4.Rds"))
-# dar_1e4 <- readRDS(here("Rdata/dar_1e4.Rds"))
+# dar_1e6 <- dar(props, contrasts = contrasts, region_fixed = 1e4)
+# saveRDS(dar_1e6, here("Rdata/dar_1e6.Rds"))
+# dar_1e6 <- readRDS(here("Rdata/dar_1e6.Rds"))
 ```
 
 ```{r}
@@ -308,37 +308,37 @@ gene_dar <- readRDS(here("Rdata/gene_dar_1e6.Rds"))
 ### EOfAD vs WT
 
 ```{r}
-plotDarECDF(dar_1e4$eofad_wt, dar_val = "region", highlight = 17)
+plotDarECDF(dar_1e6$eofad_wt, dar_val = "region", highlight = 17)
 ```
 
 ### fAI vs WT
 
 ```{r}
-plotDarECDF(dar_1e4$fai_wt, dar_val = "region", highlight = 17)
+plotDarECDF(dar_1e6$fai_wt, dar_val = "region", highlight = 17)
 ```
 
 ### EOfAD vs fAI
 
 ```{r}
-plotDarECDF(dar_1e4$eofad_fai, dar_val = "region", highlight = 17)
+plotDarECDF(dar_1e6$eofad_fai, dar_val = "region", highlight = 17)
 ```
 
 ### Tu vs PK
 
 ```{r}
-plotDarECDF(dar_1e4$pk_tu, dar_val = "region", highlight = 14)
+plotDarECDF(dar_1e6$pk_tu, dar_val = "region", highlight = 14)
 ```
 
 ### Tu vs het
 
 ```{r}
-plotDarECDF(dar_1e4$tu_het, dar_val = "region", highlight = 14)
+plotDarECDF(dar_1e6$tu_het, dar_val = "region", highlight = 14)
 ```
 
 ### PK vs het
 
 ```{r}
-plotDarECDF(dar_1e4$pk_het, dar_val = "region", highlight = 14)
+plotDarECDF(dar_1e6$pk_het, dar_val = "region", highlight = 14)
 ```
 
 :::
@@ -362,13 +362,13 @@ chr <- "1"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -380,13 +380,13 @@ chr <- "2"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -398,13 +398,13 @@ chr <- "3"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -416,13 +416,13 @@ chr <- "4"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -434,13 +434,13 @@ chr <- "5"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -452,13 +452,13 @@ chr <- "6"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -470,13 +470,13 @@ chr <- "7"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -488,13 +488,13 @@ chr <- "8"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -506,13 +506,13 @@ chr <- "9"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -524,13 +524,13 @@ chr <- "10"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -542,13 +542,13 @@ chr <- "11"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -560,13 +560,13 @@ chr <- "12"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -578,13 +578,13 @@ chr <- "13"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -596,13 +596,13 @@ chr <- "14"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -614,13 +614,13 @@ chr <- "15"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -632,13 +632,13 @@ chr <- "16"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -650,7 +650,7 @@ chr <- "17"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
         features = de_chr,
@@ -658,7 +658,7 @@ if (length(de_chr) > 0) {
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
     )
@@ -672,13 +672,13 @@ chr <- "18"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -690,13 +690,13 @@ chr <- "19"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -708,13 +708,13 @@ chr <- "20"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -726,13 +726,13 @@ chr <- "21"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -744,13 +744,13 @@ chr <- "22"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -762,13 +762,13 @@ chr <- "23"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -780,13 +780,13 @@ chr <- "24"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -798,13 +798,13 @@ chr <- "25"
 de_chr <- plyranges::filter(genes[de_eofad_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr,
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_wt, dar_val = "region", chr = chr
+        dar_1e6$eofad_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -828,13 +828,13 @@ chr <- "1"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -846,13 +846,13 @@ chr <- "2"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -864,13 +864,13 @@ chr <- "3"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -882,13 +882,13 @@ chr <- "4"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -900,13 +900,13 @@ chr <- "5"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -918,13 +918,13 @@ chr <- "6"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -936,13 +936,13 @@ chr <- "7"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -954,13 +954,13 @@ chr <- "8"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -972,13 +972,13 @@ chr <- "9"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -990,13 +990,13 @@ chr <- "10"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1008,13 +1008,13 @@ chr <- "11"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1026,13 +1026,13 @@ chr <- "12"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1044,13 +1044,13 @@ chr <- "13"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1062,13 +1062,13 @@ chr <- "14"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1080,13 +1080,13 @@ chr <- "15"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1098,13 +1098,13 @@ chr <- "16"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1116,7 +1116,7 @@ chr <- "17"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
         features = de_chr,
@@ -1124,7 +1124,7 @@ if (length(de_chr) > 0) {
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
     )
@@ -1138,13 +1138,13 @@ chr <- "18"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1156,13 +1156,13 @@ chr <- "19"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1174,13 +1174,13 @@ chr <- "20"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1192,13 +1192,13 @@ chr <- "21"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1210,13 +1210,13 @@ chr <- "22"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1228,13 +1228,13 @@ chr <- "23"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1246,13 +1246,13 @@ chr <- "24"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1264,13 +1264,13 @@ chr <- "25"
 de_chr <- plyranges::filter(genes[de_fai_wt,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr,
+        dar_1e6$fai_wt, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$fai_wt, dar_val = "region", chr = chr
+        dar_1e6$fai_wt, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1294,13 +1294,13 @@ chr <- "1"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1312,13 +1312,13 @@ chr <- "2"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1330,13 +1330,13 @@ chr <- "3"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1348,13 +1348,13 @@ chr <- "4"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1366,13 +1366,13 @@ chr <- "5"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1384,13 +1384,13 @@ chr <- "6"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1402,13 +1402,13 @@ chr <- "7"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1420,13 +1420,13 @@ chr <- "8"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1438,13 +1438,13 @@ chr <- "9"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1456,13 +1456,13 @@ chr <- "10"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1474,13 +1474,13 @@ chr <- "11"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1492,13 +1492,13 @@ chr <- "12"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1510,13 +1510,13 @@ chr <- "13"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1528,13 +1528,13 @@ chr <- "14"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1546,13 +1546,13 @@ chr <- "15"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1564,13 +1564,13 @@ chr <- "16"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1582,7 +1582,7 @@ chr <- "17"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
         features = de_chr,
@@ -1590,7 +1590,7 @@ if (length(de_chr) > 0) {
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
     )
@@ -1604,13 +1604,13 @@ chr <- "18"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1622,13 +1622,13 @@ chr <- "19"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1640,13 +1640,13 @@ chr <- "20"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1658,13 +1658,13 @@ chr <- "21"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1676,13 +1676,13 @@ chr <- "22"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1694,13 +1694,13 @@ chr <- "23"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1712,13 +1712,13 @@ chr <- "24"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1730,13 +1730,13 @@ chr <- "25"
 de_chr <- plyranges::filter(genes[de_eofad_fai,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr,
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$eofad_fai, dar_val = "region", chr = chr
+        dar_1e6$eofad_fai, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1760,13 +1760,13 @@ chr <- "1"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1778,13 +1778,13 @@ chr <- "2"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1796,13 +1796,13 @@ chr <- "3"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1814,13 +1814,13 @@ chr <- "4"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1832,13 +1832,13 @@ chr <- "5"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1850,13 +1850,13 @@ chr <- "6"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1868,13 +1868,13 @@ chr <- "7"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1886,13 +1886,13 @@ chr <- "8"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1904,13 +1904,13 @@ chr <- "9"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1922,13 +1922,13 @@ chr <- "10"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1940,13 +1940,13 @@ chr <- "11"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1958,13 +1958,13 @@ chr <- "12"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1976,13 +1976,13 @@ chr <- "13"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -1994,13 +1994,13 @@ chr <- "14"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2012,13 +2012,13 @@ chr <- "15"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2030,13 +2030,13 @@ chr <- "16"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2048,7 +2048,7 @@ chr <- "17"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
         features = de_chr,
@@ -2056,7 +2056,7 @@ if (length(de_chr) > 0) {
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
     )
@@ -2070,13 +2070,13 @@ chr <- "18"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2088,13 +2088,13 @@ chr <- "19"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2106,13 +2106,13 @@ chr <- "20"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2124,13 +2124,13 @@ chr <- "21"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2142,13 +2142,13 @@ chr <- "22"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2160,13 +2160,13 @@ chr <- "23"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2178,13 +2178,13 @@ chr <- "24"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2196,13 +2196,13 @@ chr <- "25"
 de_chr <- plyranges::filter(genes[de_pk_tu,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr,
+        dar_1e6$pk_tu, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_tu, dar_val = "region", chr = chr
+        dar_1e6$pk_tu, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2226,13 +2226,13 @@ chr <- "1"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2244,13 +2244,13 @@ chr <- "2"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2262,13 +2262,13 @@ chr <- "3"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2280,13 +2280,13 @@ chr <- "4"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2298,13 +2298,13 @@ chr <- "5"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2316,13 +2316,13 @@ chr <- "6"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2334,13 +2334,13 @@ chr <- "7"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2352,13 +2352,13 @@ chr <- "8"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2370,13 +2370,13 @@ chr <- "9"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2388,13 +2388,13 @@ chr <- "10"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2406,13 +2406,13 @@ chr <- "11"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2424,13 +2424,13 @@ chr <- "12"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2442,13 +2442,13 @@ chr <- "13"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2460,13 +2460,13 @@ chr <- "14"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2478,13 +2478,13 @@ chr <- "15"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2496,13 +2496,13 @@ chr <- "16"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2514,7 +2514,7 @@ chr <- "17"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
         features = de_chr,
@@ -2522,7 +2522,7 @@ if (length(de_chr) > 0) {
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
     )
@@ -2536,13 +2536,13 @@ chr <- "18"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2554,13 +2554,13 @@ chr <- "19"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2572,13 +2572,13 @@ chr <- "20"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2590,13 +2590,13 @@ chr <- "21"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2608,13 +2608,13 @@ chr <- "22"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2626,13 +2626,13 @@ chr <- "23"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2644,13 +2644,13 @@ chr <- "24"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2662,13 +2662,13 @@ chr <- "25"
 de_chr <- plyranges::filter(genes[de_tu_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr,
+        dar_1e6$tu_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$tu_het, dar_val = "region", chr = chr
+        dar_1e6$tu_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2692,13 +2692,13 @@ chr <- "1"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2710,13 +2710,13 @@ chr <- "2"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2728,13 +2728,13 @@ chr <- "3"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2746,13 +2746,13 @@ chr <- "4"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2764,13 +2764,13 @@ chr <- "5"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2782,13 +2782,13 @@ chr <- "6"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2800,13 +2800,13 @@ chr <- "7"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2818,13 +2818,13 @@ chr <- "8"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2836,13 +2836,13 @@ chr <- "9"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2854,13 +2854,13 @@ chr <- "10"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2872,13 +2872,13 @@ chr <- "11"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2890,13 +2890,13 @@ chr <- "12"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2908,13 +2908,13 @@ chr <- "13"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2926,13 +2926,13 @@ chr <- "14"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2944,13 +2944,13 @@ chr <- "15"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2962,13 +2962,13 @@ chr <- "16"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -2980,7 +2980,7 @@ chr <- "17"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
         features = de_chr,
@@ -2988,7 +2988,7 @@ if (length(de_chr) > 0) {
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         foi = genes[genes$gene_name == "psen1",],
         foi_anno = "gene_name", foi_highlight = TRUE,
     )
@@ -3002,13 +3002,13 @@ chr <- "18"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -3020,13 +3020,13 @@ chr <- "19"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -3038,13 +3038,13 @@ chr <- "20"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -3056,13 +3056,13 @@ chr <- "21"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -3074,13 +3074,13 @@ chr <- "22"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -3092,13 +3092,13 @@ chr <- "23"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -3110,13 +3110,13 @@ chr <- "24"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```
@@ -3128,13 +3128,13 @@ chr <- "25"
 de_chr <- plyranges::filter(genes[de_pk_het,], seqnames == chr)
 if (length(de_chr) > 0) {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr,
+        dar_1e6$pk_het, dar_val = "region", chr = chr,
         features = de_chr,
         features_anno = "gene_name", features_highlight = TRUE
     )
 } else {
     plotChrDar(
-        dar_1e4$pk_het, dar_val = "region", chr = chr
+        dar_1e6$pk_het, dar_val = "region", chr = chr
     )
 }
 ```

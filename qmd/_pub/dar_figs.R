@@ -21,6 +21,8 @@ psen1_midpoint <- genes %>%
     mutate(midpoint = ((start + end) / 2) / seq_lengths["17"]) %>%
     pull(midpoint)
 
+## D/D vs A/B
+
 de_midpoint <- tt$pk_tu %>%
     dplyr::filter(DE, chr == 14) %>%
     mutate(midpoint = ((start + end) / 2) / seq_lengths["14"]) %>%
@@ -48,6 +50,7 @@ dar_1e6$pk_tu %>%
     dplyr::arrange(point_group) %>%
     ggplot(aes(rel_position, dar_region)) +
     geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_line(aes(colour = point_group), data = . %>% dplyr::filter(point_group == "pt_true"), show.legend = FALSE) +
     geom_smooth(aes(colour = line_group), se = FALSE) +
     geom_xsidevline(xintercept = de_midpoint, linetype = "solid", colour = "darkred") +
     geom_ysidehline(yintercept = de_dar, linetype = "solid", colour = "darkred") +
@@ -85,6 +88,8 @@ ggsave(
     width = 8, height = 6
 )
 
+## D/D vs B/D & A/B vs B /D
+
 de_midpoint <- tt$pk_het %>%
     dplyr::filter(DE, chr == 14) %>%
     mutate(midpoint = ((start + end) / 2) / seq_lengths["14"]) %>%
@@ -112,6 +117,7 @@ a <- dar_1e6$pk_het %>%
     dplyr::arrange(point_group) %>%
     ggplot(aes(rel_position, dar_region)) +
     geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_line(aes(colour = point_group), data = . %>% dplyr::filter(point_group == "pt_true"), show.legend = FALSE) +
     geom_smooth(aes(colour = line_group), se = FALSE) +
     geom_xsidevline(xintercept = de_midpoint, linetype = "solid", colour = "darkred") +
     geom_ysidehline(yintercept = de_dar, linetype = "solid", colour = "darkred") +
@@ -168,6 +174,7 @@ b <- dar_1e6$tu_het %>%
     dplyr::arrange(point_group) %>%
     ggplot(aes(rel_position, dar_region)) +
     geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_line(aes(colour = point_group), data = . %>% dplyr::filter(point_group == "pt_true"), show.legend = FALSE) +
     geom_smooth(aes(colour = line_group), se = FALSE) +
     geom_xsidevline(xintercept = 0.5, linetype = "blank", colour = "darkred") +
     geom_ysidehline(yintercept = 0.5, linetype = "blank", colour = "darkred") +
@@ -211,6 +218,8 @@ ggsave(
     width = 8, height = 8
 )
 
+## T4/+ vs +/+ & W2/+ vs +/+
+
 de_midpoint <- tt$eofad_wt %>%
     dplyr::filter(DE, chr == 17) %>%
     mutate(midpoint = ((start + end) / 2) / seq_lengths["17"]) %>%
@@ -238,6 +247,7 @@ c <- dar_1e6$eofad_wt %>%
     dplyr::arrange(point_group) %>%
     ggplot(aes(rel_position, dar_region)) +
     geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_line(aes(colour = point_group), data = . %>% dplyr::filter(point_group == "pt_true"), show.legend = FALSE) +
     geom_smooth(aes(colour = line_group), se = FALSE) +
     geom_vline(xintercept = psen1_midpoint, linetype = "dashed") +
     geom_ysidehline(yintercept = de_dar, linetype = "solid", colour = "darkred") +
@@ -296,6 +306,7 @@ d <- dar_1e6$fai_wt %>%
     dplyr::arrange(point_group) %>%
     ggplot(aes(rel_position, dar_region)) +
     geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_line(aes(colour = point_group), data = . %>% dplyr::filter(point_group == "pt_true"), show.legend = FALSE) +
     geom_smooth(aes(colour = line_group), se = FALSE) +
     geom_vline(xintercept = psen1_midpoint, linetype = "dashed") +
     geom_text(x = psen1_midpoint - .05, y = 0.95, label = "psen1", fontface = "italic") +
@@ -336,11 +347,12 @@ c + d +
         ggside.panel.scale.x = 0.025 * 2,
         ggside.panel.scale.y = 0.015
     )
-# ggarrange(c, d, ncol = 1, labels = c("A", "B"), legend = "bottom", common.legend = TRUE)
 ggsave(
     "~/phd/publications/pktu_manuscript/fig/dar_chr17_eofadwt_faiwt.png",
     width = 8, height = 8
 )
+
+## T4/PK+ vs W2/PK+
 
 de_midpoint <- tt$eofad_fai %>%
     dplyr::filter(DE, chr == 17) %>%
@@ -369,6 +381,7 @@ dar_1e6$eofad_fai %>%
     dplyr::arrange(point_group) %>%
     ggplot(aes(rel_position, dar_region)) +
     geom_point(aes(colour = point_group), size = 0.5, show.legend = FALSE) +
+    geom_line(aes(colour = point_group), data = . %>% dplyr::filter(point_group == "pt_true"), show.legend = FALSE) +
     geom_smooth(aes(colour = line_group), se = FALSE) +
     geom_vline(xintercept = psen1_midpoint, linetype = "dotted") +
     geom_text(x = psen1_midpoint - .05, y = 0.95, label = "psen1", fontface = "italic") +
