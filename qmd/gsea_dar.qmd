@@ -513,8 +513,12 @@ tt_dar <- names(tt) %>%
         tt[[x]] %>%
             dplyr::filter(chr %in% primary_chrs) %>%
             left_join(as_tibble(gene_dar[[x]])[,c("gene_id", "dar")]) %>%
-            mutate(darP = modP(PValue, dar, slope = 1.9)) %>%
-            dplyr::arrange(darP)
+            mutate(darP = modP(PValue, dar, slope = -1.8)) %>%
+            dplyr::arrange(darP) %>%
+            mutate(
+                darFDR = p.adjust(darP, "BH"),
+                darDE = darFDR < 0.05
+            )
     }) %>%
     set_names(names(tt))
 ```
